@@ -76,6 +76,8 @@ public class Scanner {
 				return makeToken(VISIBILITY);
 			} else if (_currentText.toString().equals("static")) {
 				return makeToken(STATIC);
+			} else if (_currentText.toString().equals("new")) {
+				return makeToken(NEW);
 			} else if (_currentText.toString().equals("void")) {
 				return makeToken(VOID);
 			} else if (_currentText.toString().equals("int")) {
