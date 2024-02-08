@@ -124,7 +124,9 @@ public class Parser {
 	private void parseStatement() throws SyntaxError {
 		if(_currentToken.getTokenType() == LCURLY) {
 			accept(LCURLY);
-			parseStatement();
+			while(_currentToken.getTokenType() != RCURLY) {
+				parseStatement();
+			}
 			accept(RCURLY);
 		}
 
