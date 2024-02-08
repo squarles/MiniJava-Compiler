@@ -28,7 +28,7 @@ public class Scanner {
 		if(_currentChar == '/') {
 			takeIt();
 			if (_currentChar == '/') {
-				while(_currentChar != '\n') {
+				while(_currentChar != '\n' && _currentChar != 0) {
 					takeIt();
 				}
 				_currentText = new StringBuilder();
@@ -36,7 +36,7 @@ public class Scanner {
 			}
 			if (_currentChar == '*') {
 				takeIt();
-				while(_currentChar != -1) {
+				while(_currentChar != 0) {
 					if (_currentChar == '*'){
 						takeIt();
 						if (_currentChar == '/'){
@@ -276,6 +276,7 @@ public class Scanner {
 	private Token makeToken( TokenType toktype ) {
 		String text = _currentText.toString();
 		_currentText = new StringBuilder();
+		System.out.print(text);
 		return new Token(toktype, text);
 	}
 }
