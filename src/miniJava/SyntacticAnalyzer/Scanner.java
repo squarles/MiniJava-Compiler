@@ -5,15 +5,6 @@ import java.io.InputStream;
 import miniJava.ErrorReporter;
 import static miniJava.SyntacticAnalyzer.TokenType.*;
 
-// return scan() to start over
-// new stringBuilder to erase current text
-
-//check comments > scan()
-//if digit keep taking return intlit
-//if AZaz take while AZaz09_, check is reserved - > return correct one
-//opers
-//easy steps
-
 public class Scanner {
 	private InputStream _in;
 	private ErrorReporter _errors;
@@ -141,7 +132,7 @@ public class Scanner {
 				takeIt();
 				return makeToken(BINOP);
 			} else {
-				System.out.println("Lexical Error");
+				_errors.reportError("Lexical Error - expected '&'");
 				return null;
 			}
 		}
@@ -152,7 +143,7 @@ public class Scanner {
 				takeIt();
 				return makeToken(BINOP);
 			} else {
-				System.out.println("Lexical Error");
+				_errors.reportError("Lexical Error - expected '|'");
 				return null;
 			}
 		}
@@ -229,17 +220,9 @@ public class Scanner {
 		}
 
 		else {
-			System.out.println("Lexical Error");
+			_errors.reportError("Lexical Error - unrecognized character");
+			return null;
 		}
-
-		// TODO: Consider what happens if there is a comment (// or /* */)
-		
-		// TODO: What happens if there are no more tokens?
-		
-		// TODO: Determine what the token is. For example, if it is a number
-		//  keep calling takeIt() until _currentChar is not a number. Then
-		//  create the token via makeToken(TokenType.IntegerLiteral) and return it.
-		return null;
 	}
 	
 	private void takeIt() {
@@ -276,24 +259,21 @@ public class Scanner {
 			int c = _in.read();
 			_currentChar = (char)c;
 			if (c > 255) {
-				System.out.println("Lexical Error");
+				_errors.reportError("Lexical Error - non-ASCII character");
+				_currentChar = 0;
 			}
-			// TODO: What happens if c == -1? : EOF, return EOT or null
 			if(c == -1) {
 				_currentChar = 0;
 			}
-			
-			// TODO: What happens if c is not a regular ASCII character? > 255 : error
-			
 		} catch( IOException e ) {
-			System.out.println("File IO Error");
+			_errors.reportError("Something went wrong - IOException was thrown");
+			_currentChar = 0;
 		}
 	}
 	
 	private Token makeToken( TokenType toktype ) {
 		String text = _currentText.toString();
 		_currentText = new StringBuilder();
-		System.out.print(text + " ");
 		return new Token(toktype, text);
 	}
 }
