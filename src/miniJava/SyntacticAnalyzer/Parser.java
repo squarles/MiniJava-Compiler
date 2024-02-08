@@ -321,7 +321,7 @@ public class Parser {
 	// This method will accept the token and retrieve the next token.
 	//  Can be useful if you want to error check and accept all-in-one.
 	private void accept(TokenType expectedType) throws SyntaxError {
-		if( _currentToken.getTokenType() == expectedType ) {
+		if(_currentToken.getTokenType() == expectedType) {
 			_currentToken = _scanner.scan();
 			return;
 		} else {
