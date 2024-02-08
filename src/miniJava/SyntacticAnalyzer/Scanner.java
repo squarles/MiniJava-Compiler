@@ -35,6 +35,7 @@ public class Scanner {
 				return scan();
 			}
 			if (_currentChar == '*') {
+				takeIt();
 				while(_currentChar != -1) {
 					if (_currentChar == '*'){
 						takeIt();
@@ -47,6 +48,7 @@ public class Scanner {
 						takeIt();
 					}
 				}
+				_currentText = new StringBuilder();
 				return scan();
 			}
 			else {

@@ -233,7 +233,12 @@ public class Parser {
 	}
 
 	private void parseExpression() throws SyntaxError {
-		if(_currentToken.getTokenType() == UNOP) {
+		if(_currentToken.getTokenType() == BINOP) {
+			_errors.reportError("Syntax Error - expected expression");
+			throw new SyntaxError();
+		}
+
+			if(_currentToken.getTokenType() == UNOP) {
 			accept(UNOP);
 			parseExpression();
 		}
