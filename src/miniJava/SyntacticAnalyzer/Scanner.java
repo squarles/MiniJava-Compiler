@@ -133,7 +133,7 @@ public class Scanner {
 				return makeToken(BINOP);
 			} else {
 				_errors.reportError("Lexical Error - expected '&'");
-				return null;
+				return makeToken(INVALID_TOKEN);
 			}
 		}
 
@@ -144,7 +144,7 @@ public class Scanner {
 				return makeToken(BINOP);
 			} else {
 				_errors.reportError("Lexical Error - expected '|'");
-				return null;
+				return makeToken(INVALID_TOKEN);
 			}
 		}
 
@@ -216,8 +216,8 @@ public class Scanner {
 		}
 
 		else if(_currentChar == 0) {
-			return makeToken(INVALID_TOKEN);
-		}
+			return makeToken(EOF);		// never accepted anywhere
+		}								// only parsed if tokens end prematurely
 
 		else {
 			_errors.reportError("Lexical Error - unrecognized character");

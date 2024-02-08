@@ -50,5 +50,7 @@ public enum TokenType {
     MINUS,
     EQUALS,         // SINGLE EQUALS - ASSIGNMENT
 
-    INVALID_TOKEN   // EOF or Lexical Error
+    EOF,
+
+    INVALID_TOKEN   // Lexical Error
 }
