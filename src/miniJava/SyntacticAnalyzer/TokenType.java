@@ -48,5 +48,7 @@ public enum TokenType {
     UNOP,
     BINOP,
     MINUS,
-    EQUALS          // SINGLE EQUALS - ASSIGNMENT
+    EQUALS,         // SINGLE EQUALS - ASSIGNMENT
+
+    INVALID_TOKEN   // EOF or Lexical Error
 }

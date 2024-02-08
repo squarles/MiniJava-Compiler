@@ -216,12 +216,12 @@ public class Scanner {
 		}
 
 		else if(_currentChar == 0) {
-			return null;
+			return makeToken(INVALID_TOKEN);
 		}
 
 		else {
 			_errors.reportError("Lexical Error - unrecognized character");
-			return null;
+			return makeToken(INVALID_TOKEN);
 		}
 	}
 	

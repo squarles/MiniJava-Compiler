@@ -324,6 +324,8 @@ public class Parser {
 		if(_currentToken.getTokenType() == expectedType) {
 			_currentToken = _scanner.scan();
 			return;
+		} else if(_currentToken.getTokenType() == INVALID_TOKEN) {
+			throw new SyntaxError();	// message already reported in scanner
 		} else {
 			_errors.reportError("Syntax Error - Expected token " + expectedType
 					+ " but got " + _currentToken.getTokenType());
