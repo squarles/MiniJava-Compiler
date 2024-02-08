@@ -54,9 +54,6 @@ public class Parser {
 		if(_currentToken.getTokenType() == STATIC) {
 			accept(STATIC);
 		}
-		if(_currentToken.getTokenType() == IDENTIFIER) {
-			accept(IDENTIFIER);
-		}
 
 		if(_currentToken.getTokenType() == VOID) {
 			accept(VOID);

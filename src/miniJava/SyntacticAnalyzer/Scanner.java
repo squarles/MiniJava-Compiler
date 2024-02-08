@@ -276,7 +276,7 @@ public class Scanner {
 	private Token makeToken( TokenType toktype ) {
 		String text = _currentText.toString();
 		_currentText = new StringBuilder();
-		//System.out.print(text);
+		System.out.print(toktype + " ");
 		return new Token(toktype, text);
 	}
 }
