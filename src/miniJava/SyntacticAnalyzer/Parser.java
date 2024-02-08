@@ -122,7 +122,6 @@ public class Parser {
 	}
 
 	private void parseStatement() throws SyntaxError {
-
 		if(_currentToken.getTokenType() == LCURLY) {
 			accept(LCURLY);
 			parseStatement();
@@ -159,7 +158,6 @@ public class Parser {
 			accept(RPAREN);
 			parseStatement();
 		}
-
 		else if(parseCheckForType()) {	//parse something and check if it was a type
 			accept(IDENTIFIER);
 			accept(EQUALS);
@@ -211,10 +209,10 @@ public class Parser {
 					accept(IDENTIFIER);
 				}
 				return false;
+			} else {
+				return false;
 			}
 		}
-		_errors.reportError("Syntax Error - expected type or reference");
-		throw new SyntaxError();
 	}
 
 	private void parseReference() throws SyntaxError {
