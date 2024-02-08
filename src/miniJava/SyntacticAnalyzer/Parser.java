@@ -29,7 +29,7 @@ public class Parser {
 	}
 	
 	private void parseProgram() throws SyntaxError {
-		while (_currentToken != null) {
+		while (_currentToken.getTokenType() != EOF) {
 			parseClassDeclaration();
 		}
 	}
