@@ -137,8 +137,7 @@ public class Parser {
 			params.add(new ParameterDecl(type, id, null));
 		}
 		accept(RPAREN);
-		_errors.reportError("Syntax Error");
-		throw new SyntaxError();
+		return params;
 	}
 
 	private ExprList parseArguments() throws SyntaxError {
