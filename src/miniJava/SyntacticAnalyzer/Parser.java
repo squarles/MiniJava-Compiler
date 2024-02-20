@@ -23,29 +23,40 @@ public class Parser {
 		private static final long serialVersionUID = -6461942006097999362L;
 	}
 	
-	public void parse() {
+	public AST parse() {
+		AST tree = null;
 		try {
-			parseProgram();
+			tree = parseProgram();
 		} catch( SyntaxError e ) {
 		}
+		return tree;
 	}
 	
-	private void parseProgram() throws SyntaxError {
+	private Package parseProgram() throws SyntaxError {
+		ClassDeclList cdl = new ClassDeclList();
 		while (_currentToken.getTokenType() != EOF) {
-			parseClassDeclaration();
+			cdl.add(parseClassDeclaration());
 		}
+		return new Package(cdl, null);
 	}
 	
-	private void parseClassDeclaration() throws SyntaxError {
+	private ClassDecl parseClassDeclaration() throws SyntaxError {
 
 		accept(CLASS);
-		accept(IDENTIFIER);
+		String id = accept(IDENTIFIER).getTokenText();
 		accept(LCURLY);
+		FieldDeclList fdl = new FieldDeclList();
+		MethodDeclList mdl = new MethodDeclList();
 		while(_currentToken.getTokenType() != RCURLY) {
-			parseMemberDeclaration();
+			MemberDecl md = parseMemberDeclaration();
+			if(md instanceof FieldDecl) {
+				fdl.add((FieldDecl) md);
+			} else if(md instanceof MethodDecl) {
+				mdl.add((MethodDecl) md);
+			}
 		}
-
 		accept(RCURLY);
+		return new ClassDecl(id, fdl, mdl, null);
 	}
 
 	private MemberDecl parseMemberDeclaration() throws SyntaxError {

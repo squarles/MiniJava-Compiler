@@ -1,6 +1,7 @@
 package miniJava;
 
 import miniJava.SyntacticAnalyzer.*;
+import miniJava.AbstractSyntaxTrees.*;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -14,13 +15,14 @@ public class Compiler {
 		InputStream in = new FileInputStream(new File(path));
 		Scanner scanner = new Scanner(in, reporter);
 		Parser parser = new Parser(scanner, reporter);
-		parser.parse();
+		AST tree = parser.parse();
 		if(reporter.hasErrors()) {
 			System.out.println("Error");
 			reporter.outputErrors();
 		}
 		else {
-			System.out.println("Success");
+			ASTDisplay display = new ASTDisplay();
+			display.showTree(tree);
 		}
 	}
 }
