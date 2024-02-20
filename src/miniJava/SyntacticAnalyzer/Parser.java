@@ -42,39 +42,56 @@ public class Parser {
 		accept(IDENTIFIER);
 		accept(LCURLY);
 		while(_currentToken.getTokenType() != RCURLY) {
-			parseFieldOrMethodDeclaration();
+			parseMemberDeclaration();
 		}
 
 		accept(RCURLY);
 	}
 
-	private void parseFieldOrMethodDeclaration() throws SyntaxError {
+	private MemberDecl parseMemberDeclaration() throws SyntaxError {
 		boolean canBeField = true;
+		boolean isPrivate = false;
+		boolean isStatic = false;
 		if(_currentToken.getTokenType() == VISIBILITY) {
-			accept(VISIBILITY);
+			String vis = accept(VISIBILITY).getTokenText();
+			if(vis.equals("private")) {
+				isPrivate = true;
+			} else if(vis.equals("public")) {
+				isPrivate = false;
+			} else {
+				_errors.reportError("Syntax Error");
+				throw new SyntaxError();
+			}
 		}
 		if(_currentToken.getTokenType() == STATIC) {
 			accept(STATIC);
+			isStatic = true;
 		}
 
+		TypeDenoter type = null;
 		if(_currentToken.getTokenType() == VOID) {
 			accept(VOID);
 			canBeField = false;
+			type = new BaseType(TypeKind.VOID, null);
 		} else {
-			parseType();
+			type = parseType();
 		}
 
-		accept(IDENTIFIER);
+		String id = accept(IDENTIFIER).getTokenText();
+		FieldDecl fd = new FieldDecl(isPrivate, isStatic, type, id, null);
+
 		if((_currentToken.getTokenType() == SEMICOLON) && canBeField) {
 			accept(SEMICOLON);
-			return;
+			return fd;
 		} else {
-			parseParameters();
+			ParameterDeclList params = parseParameters();
 			accept(LCURLY);
+			StatementList sl = new StatementList();
 			while(_currentToken.getTokenType() != RCURLY) {
-				parseStatement();
+				sl.add(parseStatement());
 			}
 			accept(RCURLY);
+			return new MethodDecl(fd, params, sl, null);
 		}
 	}
 
@@ -105,18 +122,23 @@ public class Parser {
 		}
 	}
 
-	private void parseParameters() throws SyntaxError {
+	private ParameterDeclList parseParameters() throws SyntaxError {
+		ParameterDeclList params = new ParameterDeclList();
 		accept(LPAREN);
 		if(_currentToken.getTokenType() != RPAREN) {
-			parseType();
-			accept(IDENTIFIER);
+			TypeDenoter type = parseType();
+			String id = accept(IDENTIFIER).getTokenText();
+			params.add(new ParameterDecl(type, id, null));
 		}
 		while(_currentToken.getTokenType() == COMMA) {
 			accept(COMMA);
-			parseType();
-			accept(IDENTIFIER);
+			TypeDenoter type = parseType();
+			String id = accept(IDENTIFIER).getTokenText();
+			params.add(new ParameterDecl(type, id, null));
 		}
 		accept(RPAREN);
+		_errors.reportError("Syntax Error");
+		throw new SyntaxError();
 	}
 
 	private ExprList parseArguments() throws SyntaxError {
