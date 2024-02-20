@@ -8,7 +8,10 @@ public class Token {
 		_type = type;
 		_text = text;
 	}
-	
+
+	public SourcePosition getTokenPosition() {
+		return null;
+	}
 	public TokenType getTokenType() {
 		return _type;
 	}

@@ -1,5 +1,7 @@
 package miniJava.SyntacticAnalyzer;
 
+import miniJava.AbstractSyntaxTrees.Package;
+import miniJava.AbstractSyntaxTrees.*;
 import miniJava.ErrorReporter;
 import static miniJava.SyntacticAnalyzer.TokenType.*;
 
@@ -76,18 +78,26 @@ public class Parser {
 		}
 	}
 
-	private void parseType() throws SyntaxError {
+	private TypeDenoter parseType() throws SyntaxError {
 		if(_currentToken.getTokenType() == INT) {
 			accept(INT);
+			TypeDenoter type = new BaseType(TypeKind.INT, null);
 			if(_currentToken.getTokenType() == BRACKETS) {
 				accept(BRACKETS);
+				return new ArrayType(type, null);
+			} else {
+				return type;
 			}
 		} else if (_currentToken.getTokenType() == BOOLEAN) {
 			accept(BOOLEAN);
+			return new BaseType(TypeKind.BOOLEAN, null);
 		} else if (_currentToken.getTokenType() == IDENTIFIER) {
-			accept(IDENTIFIER);
+			TypeDenoter type = new ClassType(new Identifier(accept(IDENTIFIER)), null);
 			if(_currentToken.getTokenType() == BRACKETS) {
 				accept(BRACKETS);
+				return new ArrayType(type, null);
+			} else {
+				return type;
 			}
 		} else {
 			_errors.reportError("Syntax Error - expected valid type");
@@ -160,73 +170,76 @@ public class Parser {
 			accept(RPAREN);
 			parseStatement();
 		}
-		else if(parseCheckForType()) {	//parse something and check if it was a type
-			accept(IDENTIFIER);
-			accept(EQUALS);
-			parseExpression();
-			accept(SEMICOLON);
-		}
-
-		else {							//it was a reference otherwise
-			if(_currentToken.getTokenType() == EQUALS) {
+		else {
+			AST next = parseCheckForType();
+			if (next instanceof TypeDenoter) {    //parse something and check if it was a type
+				accept(IDENTIFIER);
 				accept(EQUALS);
 				parseExpression();
 				accept(SEMICOLON);
-			} else if (_currentToken.getTokenType() == LBRACKET) {
-				accept(LBRACKET);
-				parseExpression();
-				accept(RBRACKET);
-				accept(EQUALS);
-				parseExpression();
-				accept(SEMICOLON);
-			} else if (_currentToken.getTokenType() == LPAREN) {
-				parseArguments();
-				accept(SEMICOLON);
-			} else {
-				_errors.reportError("Syntax Error");
-				throw new SyntaxError();
+			} else {                            //it was a reference otherwise
+				if (_currentToken.getTokenType() == EQUALS) {
+					accept(EQUALS);
+					parseExpression();
+					accept(SEMICOLON);
+				} else if (_currentToken.getTokenType() == LBRACKET) {
+					accept(LBRACKET);
+					parseExpression();
+					accept(RBRACKET);
+					accept(EQUALS);
+					parseExpression();
+					accept(SEMICOLON);
+				} else if (_currentToken.getTokenType() == LPAREN) {
+					parseArguments();
+					accept(SEMICOLON);
+				} else {
+					_errors.reportError("Syntax Error");
+					throw new SyntaxError();
+				}
 			}
 		}
 	}
 
-	private boolean parseCheckForType() throws SyntaxError {		// parse a type and return true
-		if(_currentToken.getTokenType() == INT	// or parse a ref and return false
+	private AST parseCheckForType() throws SyntaxError {	// where it could be a type or reference
+		if(_currentToken.getTokenType() == INT
 				||_currentToken.getTokenType() == BOOLEAN )	{
-			parseType();
-			return true;
+			return parseType();
 		} else if (_currentToken.getTokenType() == THIS) {
-			parseReference();
-			return false;
+			return parseReference();
 		} else {
-			accept(IDENTIFIER);
+			Identifier id = new Identifier(accept(IDENTIFIER));
 			if(_currentToken.getTokenType() == BRACKETS) {
 				accept(BRACKETS);
-				return true;
+				return new ArrayType(new ClassType(id, null), null);
 			} else if (_currentToken.getTokenType() == IDENTIFIER) {
-				return true;
+				return new ClassType(id, null);
 			}
 			else if (_currentToken.getTokenType() == PERIOD) {
+				Reference ref = new IdRef(id, null);
 				while(_currentToken.getTokenType() == PERIOD) {
 					accept(PERIOD);
-					accept(IDENTIFIER);
+					ref = new QualRef(ref, new Identifier(accept(IDENTIFIER)), null);
 				}
-				return false;
+				return ref;
 			} else {
-				return false;
+				return new IdRef(id,null);
 			}
 		}
 	}
 
-	private void parseReference() throws SyntaxError {
+	private Reference parseReference() throws SyntaxError {
+		Reference reference;
 		if(_currentToken.getTokenType() == THIS) {
 			accept(THIS);
+			reference = new ThisRef(null);
 		} else {
-			accept(IDENTIFIER);
+			reference = new IdRef(new Identifier(accept(IDENTIFIER)), null);
 		}
 		while(_currentToken.getTokenType() == PERIOD) {
 			accept(PERIOD);
-			accept(IDENTIFIER);
+			reference = new QualRef(reference, new Identifier(accept(IDENTIFIER)), null);
 		}
+		return reference;
 	}
 
 	private void parseExpression() throws SyntaxError {
@@ -322,10 +335,10 @@ public class Parser {
 
 	// This method will accept the token and retrieve the next token.
 	//  Can be useful if you want to error check and accept all-in-one.
-	private void accept(TokenType expectedType) throws SyntaxError {
+	private Token accept(TokenType expectedType) throws SyntaxError {
+		Token t = _currentToken;
 		if(_currentToken.getTokenType() == expectedType) {
 			_currentToken = _scanner.scan();
-			return;
 		} else if(_currentToken.getTokenType() == INVALID_TOKEN) {
 			throw new SyntaxError();	// message already reported in scanner
 		} else {
@@ -333,5 +346,6 @@ public class Parser {
 					+ " but got " + _currentToken.getTokenType());
 			throw new SyntaxError();
 		}
+		return t;
 	}
 }
