@@ -133,76 +133,90 @@ public class Parser {
 		return el;
 	}
 
-	private void parseStatement() throws SyntaxError {
+	private Statement parseStatement() throws SyntaxError {
 		if(_currentToken.getTokenType() == LCURLY) {
 			accept(LCURLY);
+			StatementList sl = new StatementList();
 			while(_currentToken.getTokenType() != RCURLY) {
-				parseStatement();
+				sl.add(parseStatement());
 			}
 			accept(RCURLY);
+			return new BlockStmt(sl, null);
 		}
 
 		else if(_currentToken.getTokenType() == RETURN) {
 			accept(RETURN);
+			Expression exp = null;
 			if(_currentToken.getTokenType() == SEMICOLON) {
 				accept(SEMICOLON);
-				return;
 			} else {
-				parseExpression();
+				exp = parseExpression();
 				accept(SEMICOLON);
 			}
+			return new ReturnStmt(exp, null);
 		}
 
 		else if(_currentToken.getTokenType() == IF) {
 			accept(IF);
 			accept(LPAREN);
-			parseExpression();
+			Expression exp = parseExpression();
 			accept(RPAREN);
-			parseStatement();
+			Statement thenst = parseStatement();
 			if(_currentToken.getTokenType() == ELSE) {
 				accept(ELSE);
-				parseStatement();
+				Statement elsest = parseStatement();
+				return new IfStmt(exp, thenst, elsest, null);
 			}
+			return new IfStmt(exp, thenst, null);
 		}
 
 		else if(_currentToken.getTokenType() == WHILE) {
 			accept(WHILE);
 			accept(LPAREN);
-			parseExpression();
+			Expression exp = parseExpression();
 			accept(RPAREN);
-			parseStatement();
+			Statement st = parseStatement();
+			return new WhileStmt(exp, st, null);
 		}
 		else {
-			AST next = parseCheckForType();
-			if (next instanceof TypeDenoter) {    //parse something and check if it was a type
-				accept(IDENTIFIER);
+			AST next = parseTypeOrRef();
+			if (next instanceof TypeDenoter type) {
+				String id = accept(IDENTIFIER).getTokenText();
 				accept(EQUALS);
-				parseExpression();
+				Expression exp = parseExpression();
 				accept(SEMICOLON);
-			} else {                            //it was a reference otherwise
+				VarDecl vd = new VarDecl(type, id, null);
+				return new VarDeclStmt(vd, exp, null);
+			} else if(next instanceof Reference ref) {                            //it was a reference otherwise
 				if (_currentToken.getTokenType() == EQUALS) {
 					accept(EQUALS);
-					parseExpression();
+					Expression exp = parseExpression();
 					accept(SEMICOLON);
+					return new AssignStmt(ref, exp, null);
 				} else if (_currentToken.getTokenType() == LBRACKET) {
 					accept(LBRACKET);
-					parseExpression();
+					Expression inside = parseExpression();
 					accept(RBRACKET);
 					accept(EQUALS);
-					parseExpression();
+					Expression outside = parseExpression();
 					accept(SEMICOLON);
+					return new IxAssignStmt(ref, inside, outside, null);
 				} else if (_currentToken.getTokenType() == LPAREN) {
-					parseArguments();
+					ExprList args = parseArguments();
 					accept(SEMICOLON);
+					return new CallStmt(ref, args, null);
 				} else {
 					_errors.reportError("Syntax Error");
 					throw new SyntaxError();
 				}
+			} else {
+				_errors.reportError("Syntax Error - Should not be reachable");
+				throw new SyntaxError();
 			}
 		}
 	}
 
-	private AST parseCheckForType() throws SyntaxError {	// where it could be a type or reference
+	private AST parseTypeOrRef() throws SyntaxError {	// where it could be a type or reference
 		if(_currentToken.getTokenType() == INT
 				||_currentToken.getTokenType() == BOOLEAN )	{
 			return parseType();
