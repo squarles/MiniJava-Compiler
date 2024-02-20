@@ -180,14 +180,16 @@ public class Parser {
 		}
 		else {
 			AST next = parseTypeOrRef();
-			if (next instanceof TypeDenoter type) {
+			if (next instanceof TypeDenoter) {
+				TypeDenoter type = (TypeDenoter) next;
 				String id = accept(IDENTIFIER).getTokenText();
 				accept(EQUALS);
 				Expression exp = parseExpression();
 				accept(SEMICOLON);
 				VarDecl vd = new VarDecl(type, id, null);
 				return new VarDeclStmt(vd, exp, null);
-			} else if(next instanceof Reference ref) {                            //it was a reference otherwise
+			} else if(next instanceof Reference) {                            //it was a reference otherwise
+				Reference ref = (Reference) next;
 				if (_currentToken.getTokenType() == EQUALS) {
 					accept(EQUALS);
 					Expression exp = parseExpression();
