@@ -410,6 +410,7 @@ public class Parser {
 				return new RefExpr(ref, null);
 			}
 		} else {
+			_errors.reportError("Syntax Error");
 			throw new SyntaxError();
 		}
 	}
