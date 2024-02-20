@@ -119,16 +119,18 @@ public class Parser {
 		accept(RPAREN);
 	}
 
-	private void parseArguments() throws SyntaxError {
+	private ExprList parseArguments() throws SyntaxError {
 		accept(LPAREN);
+		ExprList el = new ExprList();
 		if(_currentToken.getTokenType() != RPAREN) {
-			parseExpression();
+			el.add(parseExpression());
 		}
 		while(_currentToken.getTokenType() == COMMA) {
 			accept(COMMA);
-			parseExpression();
+			el.add(parseExpression());
 		}
 		accept(RPAREN);
+		return el;
 	}
 
 	private void parseStatement() throws SyntaxError {
@@ -242,51 +244,131 @@ public class Parser {
 		return reference;
 	}
 
-	private void parseExpression() throws SyntaxError {
+	private Expression parseExpression() {
+		return parseDisjunction();
+	}
+
+	private Expression parseDisjunction() {
+		Expression e1 = parseConjunction();
+		while (_currentToken.getTokenText().equals("||")) {
+			Operator op = new Operator(accept(BINOP));
+			Expression e2 = parseConjunction();
+			e1 = new BinaryExpr(op, e1, e2, null);
+		}
+		return e1;
+	}
+	private Expression parseConjunction() {
+		Expression e1 = parseEquality();
+		while (_currentToken.getTokenText().equals("&&")) {
+			Operator op = new Operator(accept(BINOP));
+			Expression e2 = parseEquality();
+			e1 = new BinaryExpr(op, e1, e2, null);
+		}
+		return e1;
+	}
+	private Expression parseEquality() {
+		Expression e1 = parseRelational();
+		while (_currentToken.getTokenText().equals("==")
+			|| _currentToken.getTokenText().equals("!="))
+		{
+			Operator op = new Operator(accept(BINOP));
+			Expression e2 = parseRelational();
+			e1 = new BinaryExpr(op, e1, e2, null);
+		}
+		return e1;
+	}
+	private Expression parseRelational() {
+		Expression e1 = parseAdditive();
+		while (_currentToken.getTokenText().equals("<")
+			|| _currentToken.getTokenText().equals(">")
+			|| _currentToken.getTokenText().equals("<=")
+			|| _currentToken.getTokenText().equals(">="))
+
+		{
+			Operator op = new Operator(accept(BINOP));
+			Expression e2 = parseAdditive();
+			e1 = new BinaryExpr(op, e1, e2, null);
+		}
+		return e1;
+	}
+	private Expression parseAdditive() {
+		Expression e1 = parseMultiplicative();
+		while (_currentToken.getTokenText().equals("+")
+			|| _currentToken.getTokenText().equals("-"))
+		{
+			Operator op;
+			if(_currentToken.getTokenType() == MINUS) {
+				op = new Operator(accept(MINUS));
+			} else {
+				op = new Operator(accept(BINOP));
+			}
+			Expression e2 = parseMultiplicative();
+			e1 = new BinaryExpr(op, e1, e2, null);
+		}
+		return e1;
+	}
+	private Expression parseMultiplicative() {
+		Expression e1 = parseNonBinaryExpression();
+		while (_currentToken.getTokenText().equals("*")
+			|| _currentToken.getTokenText().equals("/"))
+		{
+			Operator op = new Operator(accept(BINOP));
+			Expression e2 = parseNonBinaryExpression();
+			e1 = new BinaryExpr(op, e1, e2, null);
+		}
+		return e1;
+	}
+
+	private Expression parseNonBinaryExpression() throws SyntaxError {
 		if(_currentToken.getTokenType() == BINOP) {
 			_errors.reportError("Syntax Error - expected expression");
 			throw new SyntaxError();
 		}
 
-			if(_currentToken.getTokenType() == UNOP) {
-			accept(UNOP);
-			parseExpression();
+		if(_currentToken.getTokenType() == UNOP) {
+			Operator op = new Operator(accept(UNOP));
+			return new UnaryExpr(op, parseExpression(), null);
 		}
 
 		else if(_currentToken.getTokenType() == MINUS) {	//Same as UNOP, because it is one
-			accept(MINUS);
-			parseExpression();
+			Operator op = new Operator(accept(MINUS));
+			return new UnaryExpr(op, parseExpression(), null);
 		}
 
 		else if(_currentToken.getTokenType() == LPAREN) {
 			accept(LPAREN);
-			parseExpression();
+			Expression exp = parseExpression();
 			accept(RPAREN);
+			return exp;
 		}
 
 		else if(_currentToken.getTokenType() == INTLITERAL) {
-			accept(INTLITERAL);
+			Terminal t = new IntLiteral(accept(INTLITERAL));
+			return new LiteralExpr(t, null);
 		}
 
 		else if(_currentToken.getTokenType() == BOOLLITERAL) {
-			accept(BOOLLITERAL);
+			Terminal t = new BooleanLiteral(accept(BOOLLITERAL));
+			return new LiteralExpr(t, null);
 		}
 
 		else if(_currentToken.getTokenType() == NEW) {
 			accept(NEW);
 
 			if(_currentToken.getTokenType() == IDENTIFIER) {
-				accept(IDENTIFIER);
+				ClassType type = new ClassType(new Identifier(accept(IDENTIFIER)),null);
 
 				if(_currentToken.getTokenType() == LBRACKET) {
 					accept(LBRACKET);
-					parseExpression();
+					Expression exp = parseExpression();
 					accept(RBRACKET);
+					return new NewArrayExpr(type, exp,null);
 				}
 
 				else if(_currentToken.getTokenType() == LPAREN) {
 					accept(LPAREN);
 					accept(RPAREN);
+					return new NewObjectExpr(type, null);
 				}
 
 				else {
@@ -298,8 +380,10 @@ public class Parser {
 			else if(_currentToken.getTokenType() == INT) {
 				accept(INT);
 				accept(LBRACKET);
-				parseExpression();
+				Expression exp = parseExpression();
 				accept(RBRACKET);
+				BaseType type = new BaseType(TypeKind.INT, null);
+				return new NewArrayExpr(type, exp, null);
 			}
 
 			else {
@@ -311,25 +395,22 @@ public class Parser {
 		// REF CASES
 		else if(_currentToken.getTokenType() == IDENTIFIER
 				|| _currentToken.getTokenType() == THIS) {
-			parseReference();
+			Reference ref = parseReference();
 			if(_currentToken.getTokenType() == LBRACKET) {
 				accept(LBRACKET);
-				parseExpression();
+				Expression exp = parseExpression();
 				accept(RBRACKET);
+				return new IxExpr(ref, exp, null);
 			}
 
 			else if(_currentToken.getTokenType() == LPAREN) {
-				parseArguments();
+				ExprList args = parseArguments();
+				return new CallExpr(ref, args, null);
+			} else {
+				return new RefExpr(ref, null);
 			}
-		}
-
-		//EXP BINOP EXP
-		if(_currentToken.getTokenType() == BINOP) {
-			accept(BINOP);
-			parseExpression();
-		} else if(_currentToken.getTokenType() == MINUS) {
-			accept(MINUS);
-			parseExpression();
+		} else {
+			throw new SyntaxError();
 		}
 	}
 

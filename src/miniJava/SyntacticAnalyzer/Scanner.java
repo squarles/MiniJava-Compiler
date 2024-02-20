@@ -10,12 +10,12 @@ public class Scanner {
 	private ErrorReporter _errors;
 	private StringBuilder _currentText;
 	private char _currentChar;
-	
+
 	public Scanner( InputStream in, ErrorReporter errors ) {
 		this._in = in;
 		this._errors = errors;
 		this._currentText = new StringBuilder();
-		
+
 		nextChar();
 	}
 	
@@ -35,11 +35,13 @@ public class Scanner {
 				return scan();
 			}
 			if (_currentChar == '*') {
+				boolean inBlock = true;
 				takeIt();
 				while(_currentChar != 0) {
 					if (_currentChar == '*'){
 						takeIt();
 						if (_currentChar == '/'){
+							inBlock = false;
 							takeIt();
 							break;
 						}
@@ -47,6 +49,10 @@ public class Scanner {
 					else {
 						takeIt();
 					}
+				}
+				if(inBlock) {
+					_errors.reportError("Lexical Error - Block Comment Doesn't End");
+					return makeToken(INVALID_TOKEN);
 				}
 				_currentText = new StringBuilder();
 				return scan();
