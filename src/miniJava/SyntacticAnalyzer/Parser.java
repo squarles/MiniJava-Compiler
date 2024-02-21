@@ -375,12 +375,12 @@ public class Parser {
 
 		if(_currentToken.getTokenType() == UNOP) {
 			Operator op = new Operator(accept(UNOP));
-			return new UnaryExpr(op, parseExpression(), null);
+			return new UnaryExpr(op, parseNonBinaryExpression(), null);
 		}
 
 		else if(_currentToken.getTokenType() == MINUS) {	//Same as UNOP, because it is one
 			Operator op = new Operator(accept(MINUS));
-			return new UnaryExpr(op, parseExpression(), null);
+			return new UnaryExpr(op, parseNonBinaryExpression(), null);
 		}
 
 		else if(_currentToken.getTokenType() == LPAREN) {
