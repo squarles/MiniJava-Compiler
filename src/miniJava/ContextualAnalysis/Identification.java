@@ -27,6 +27,7 @@ public class Identification implements Visitor<Object,Object> {
 	public void parse( Package prog ) {
 		try {
 			prog.visit(this,null);
+			SI.printStack();
 		} catch( IdentificationError e ) {
 			_errors.reportError(e.toString());
 		}
@@ -135,6 +136,7 @@ public class Identification implements Visitor<Object,Object> {
 	}
 	public Object visitParameterDecl(ParameterDecl pd, Object cd) {
 		SI.addDeclaration(pd);
+		pd.type.visit(this, cd);
 		return null;
 	}
 	public Object visitVarDecl(VarDecl decl, Object cd) {
@@ -144,7 +146,10 @@ public class Identification implements Visitor<Object,Object> {
 	// Types
 	public Object visitBaseType(BaseType type, Object cd) { return null; }
 	public Object visitClassType(ClassType type, Object cd) {
-		SI.findClassDeclaration(type.className);
+		ClassDecl TypeDeclaration = SI.findClassDeclaration(type.className);
+		if (TypeDeclaration == null) {
+			throw new IdentificationError(type,"Undefined class type: " + type.className.spelling);
+		}
 		return null;
 	}
 	public Object visitArrayType(ArrayType type, Object cd) { return null; }

@@ -28,9 +28,17 @@ public class Compiler {
 				reporter.outputErrors();
 			}
 			else {
-				System.out.println("Success");
-				//ASTDisplay display = new ASTDisplay();
-				//display.showTree(tree);
+				TypeChecking typeChecking = new TypeChecking(reporter);
+				typeChecking.parse((Package) tree);
+				if(reporter.hasErrors()) {
+					System.out.println("Error");
+					reporter.outputErrors();
+				}
+				else {
+					System.out.println("Success");
+					//ASTDisplay display = new ASTDisplay();
+					//display.showTree(tree);
+				}
 			}
 		}
 	}
