@@ -187,7 +187,7 @@ public class Identification implements Visitor<Object,Object> {
 	public Object visitIfStmt(IfStmt stmt, Object cd) {
 		stmt.cond.visit(this, cd);
 		stmt.thenStmt.visit(this, cd);
-		if(stmt.elseStmt != null) {
+		if(stmt.elseStmt != null) {//
 			stmt.elseStmt.visit(this, cd);
 		}
 		return null;
