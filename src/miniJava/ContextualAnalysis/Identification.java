@@ -11,6 +11,8 @@ import static miniJava.AbstractSyntaxTrees.TypeKind.*;
 public class Identification implements Visitor<Object,Object> {
 	private ErrorReporter _errors;
 	private ScopedIdentification SI;
+
+	private boolean inStatic = false;
 	
 	public Identification(ErrorReporter errors) {
 		this.SI = new ScopedIdentification();
@@ -113,9 +115,12 @@ public class Identification implements Visitor<Object,Object> {
 		return null;
 	}
 	public Object visitFieldDecl(FieldDecl fd, Object cd) {
+		fd.type.visit(this, null);
 		return null;
 	}
 	public Object visitMethodDecl(MethodDecl md, Object cd) {
+		md.type.visit(this, null);
+		inStatic = md.isStatic;
 		SI.openScope();
 		for (int i = 0; i < md.parameterDeclList.size(); i++) {
 			md.parameterDeclList.get(i).visit(this, cd);
@@ -255,7 +260,12 @@ public class Identification implements Visitor<Object,Object> {
 	}
 
 	// References
-	public Object visitThisRef(ThisRef ref, Object cd) { return cd; }
+	public Object visitThisRef(ThisRef ref, Object cd) {
+		if(inStatic) {
+			throw new IdentificationError(ref, "Cannot use this in static");
+		}
+		return cd;
+	}
 
 	public Object visitIdRef(IdRef ref, Object cd) {
 		return ref.id.visit(this, cd);
