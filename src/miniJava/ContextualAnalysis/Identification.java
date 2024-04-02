@@ -13,6 +13,7 @@ public class Identification implements Visitor<Object,Object> {
 	private ScopedIdentification SI;
 
 	private boolean inStatic = false;
+	private String varDeclared = null;
 	
 	public Identification(ErrorReporter errors) {
 		this.SI = new ScopedIdentification();
@@ -160,6 +161,7 @@ public class Identification implements Visitor<Object,Object> {
 		return null;
 	}
 	public Object visitVarDeclStmt(VarDeclStmt stmt, Object cd) {
+		varDeclared = stmt.varDecl.name;
 		stmt.initExp.visit(this, cd);
 		stmt.varDecl.visit(this, cd);
 		return null;
@@ -298,6 +300,9 @@ public class Identification implements Visitor<Object,Object> {
 
 	// Terminals
 	public Object visitIdentifier(Identifier id, Object cd) throws IdentificationError {
+		if (id.spelling.equals(varDeclared)) {
+			throw new IdentificationError(id, "Can't use var in its declaration");
+		}
 		SI.findDeclaration(id, (ClassDecl) cd);
 		if(id.decl == null) {
 			throw new IdentificationError(id, "Identification Error: " + id.spelling);
