@@ -27,7 +27,6 @@ public class Identification implements Visitor<Object,Object> {
 	public void parse( Package prog ) {
 		try {
 			prog.visit(this,null);
-			SI.printStack();
 		} catch( IdentificationError e ) {
 			_errors.reportError(e.toString());
 		}
