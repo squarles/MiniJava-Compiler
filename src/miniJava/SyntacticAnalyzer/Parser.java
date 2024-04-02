@@ -375,6 +375,7 @@ public class Parser {
 		}
 
 		if(_currentToken.getTokenType().equals(NULL)) {
+			accept(NULL);
 			return new RefExpr(new NullReference(null), null);
 		}
 

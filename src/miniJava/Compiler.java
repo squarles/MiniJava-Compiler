@@ -15,17 +15,23 @@ public class Compiler {
 		InputStream in = new FileInputStream(new File(path));
 		Scanner scanner = new Scanner(in, reporter);
 		Parser parser = new Parser(scanner, reporter);
-		Identification identification = new Identification(reporter);
 		AST tree = parser.parse();
-		identification.parse((Package) tree);
 		if(reporter.hasErrors()) {
 			System.out.println("Error");
 			reporter.outputErrors();
 		}
 		else {
-			System.out.println("Success");
-			//ASTDisplay display = new ASTDisplay();
-			//display.showTree(tree);
+			Identification identification = new Identification(reporter);
+			identification.parse((Package) tree);
+			if(reporter.hasErrors()) {
+				System.out.println("Error");
+				reporter.outputErrors();
+			}
+			else {
+				System.out.println("Success");
+				//ASTDisplay display = new ASTDisplay();
+				//display.showTree(tree);
+			}
 		}
 	}
 }
