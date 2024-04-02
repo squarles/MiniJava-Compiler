@@ -164,6 +164,7 @@ public class Identification implements Visitor<Object,Object> {
 		varDeclared = stmt.varDecl.name;
 		stmt.initExp.visit(this, cd);
 		stmt.varDecl.visit(this, cd);
+		varDeclared = null;
 		return null;
 	}
 	public Object visitAssignStmt(AssignStmt stmt, Object cd) {
