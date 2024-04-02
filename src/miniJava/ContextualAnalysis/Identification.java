@@ -151,9 +151,6 @@ public class Identification implements Visitor<Object,Object> {
 		for (int i = 0; i < stmt.sl.size(); i++) {
 			stmt.sl.get(i).visit(this, cd);
 		}
-		if (stmt.sl.size() == 1 && stmt.sl.get(0) instanceof VarDeclStmt) {
-			throw new IdentificationError(stmt, "solitary variable declaration statement not permitted here");
-		}
 		SI.closeScope();
 		return null;
 	}
@@ -267,7 +264,7 @@ public class Identification implements Visitor<Object,Object> {
 	public Object visitQRef(QualRef ref, Object cd) throws IdentificationError {
 		ClassDecl left = (ClassDecl) ref.ref.visit(this, cd);
 		if(left == null) {
-			throw new IdentificationError(ref, "Identiification Error: " + ref.id.spelling);
+			throw new IdentificationError(ref, "Identification Error: " + ref.id.spelling);
 		}
 		ClassDecl right = (ClassDecl) ref.id.visit(this, left);
 		if(ref.id.decl == null) {
