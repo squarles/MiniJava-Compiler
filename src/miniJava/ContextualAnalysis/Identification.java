@@ -279,6 +279,8 @@ public class Identification implements Visitor<Object,Object> {
 		ClassDecl right = (ClassDecl) ref.id.visit(this, left);
 		if(ref.id.decl == null) {
 			throw new IdentificationError(ref, "Identification Error: " + ref.id.spelling);
+		} else if (ref.id.decl instanceof ClassDecl || ref.id.decl instanceof MethodDecl) {
+			return null;
 		}
 		if (ref.ref instanceof IdRef) {
 			if (((IdRef) ref.ref).id.decl instanceof ClassDecl) {
