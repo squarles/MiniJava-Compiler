@@ -165,8 +165,8 @@ public class Identification implements Visitor<Object,Object> {
 		return null;
 	}
 	public Object visitAssignStmt(AssignStmt stmt, Object cd) {
-		stmt.ref.visit(this, cd);
 		stmt.val.visit(this, cd);
+		stmt.ref.visit(this, cd);
 		return null;
 	}
 	public Object visitIxAssignStmt(IxAssignStmt stmt, Object cd) {
