@@ -190,11 +190,17 @@ public class Identification implements Visitor<Object,Object> {
 		if(stmt.elseStmt != null) {
 			stmt.elseStmt.visit(this, cd);
 		}
+		if (stmt.thenStmt instanceof VarDeclStmt || stmt.elseStmt instanceof VarDeclStmt) {
+			throw new IdentificationError(stmt, "solitary variable declaration statement not permitted here");
+		}
 		return null;
 	}
 	public Object visitWhileStmt(WhileStmt stmt, Object cd) {
 		stmt.cond.visit(this, cd);
 		stmt.body.visit(this, cd);
+		if (stmt.body instanceof VarDeclStmt) {
+			throw new IdentificationError(stmt, "solitary variable declaration statement not permitted here");
+		}
 		return null;
 	}
 
