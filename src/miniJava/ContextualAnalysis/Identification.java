@@ -160,19 +160,19 @@ public class Identification implements Visitor<Object,Object> {
 		return null;
 	}
 	public Object visitVarDeclStmt(VarDeclStmt stmt, Object cd) {
-		stmt.varDecl.visit(this, cd);
 		stmt.initExp.visit(this, cd);
+		stmt.varDecl.visit(this, cd);
 		return null;
 	}
 	public Object visitAssignStmt(AssignStmt stmt, Object cd) {
-		stmt.val.visit(this, cd);
 		stmt.ref.visit(this, cd);
+		stmt.val.visit(this, cd);
 		return null;
 	}
 	public Object visitIxAssignStmt(IxAssignStmt stmt, Object cd) {
-		stmt.ref.visit(this, cd);
 		stmt.ix.visit(this, cd);
 		stmt.exp.visit(this, cd);
+		stmt.ref.visit(this, cd);
 		return null;
 	}
 	public Object visitCallStmt(CallStmt stmt, Object cd) {
