@@ -23,8 +23,15 @@ public class ScopedIdentification {
     public void closeScope(){
         stack.pop();
     }
-    public void addDeclaration(Declaration declaration) throws IdentificationError{
+    public void addDeclaration(Declaration declaration) throws IdentificationError {
         String name = declaration.name;
+        if(stack.size() > 2) {
+            for (int i = 2; i < stack.size() - 1; i++) {
+                if (stack.get(i).get(name) != null) {
+                    throw new IdentificationError(declaration, "Identification Error - Declared Twice");
+                }
+            }
+        }
         if(stack.peek().get(name) == null) {
             stack.peek().put(name, declaration);
         } else {
