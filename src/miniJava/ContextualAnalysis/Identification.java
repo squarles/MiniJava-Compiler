@@ -8,13 +8,6 @@ import miniJava.SyntacticAnalyzer.TokenType;
 
 import static miniJava.AbstractSyntaxTrees.TypeKind.*;
 
-import java.lang.reflect.Method;
-
-// first map class name
-// add each class's fields and methods without visiting
-// then go depthwise on the SI stack
-// context: be able to pass the class
-
 public class Identification implements Visitor<Object,Object> {
 	private ErrorReporter _errors;
 	private ScopedIdentification SI;
@@ -157,6 +150,9 @@ public class Identification implements Visitor<Object,Object> {
 		SI.openScope();
 		for (int i = 0; i < stmt.sl.size(); i++) {
 			stmt.sl.get(i).visit(this, cd);
+		}
+		if (stmt.sl.size() == 1 && stmt.sl.get(0) instanceof VarDeclStmt) {
+			throw new IdentificationError(stmt, "solitary variable declaration statement not permitted here");
 		}
 		SI.closeScope();
 		return null;
