@@ -5,6 +5,8 @@
  */
 package miniJava.AbstractSyntaxTrees;
 
+import miniJava.ContextualAnalysis.ScopedIdentification;
+
 /*
  * Display AST in text form, one node per line, using indentation to show 
  * subordinate nodes below a parent node.
@@ -21,6 +23,7 @@ package miniJava.AbstractSyntaxTrees;
 public class ASTDisplay implements Visitor<String,Object> {
 	
 	public static boolean showPosition = false;
+    public static ScopedIdentification SI = new ScopedIdentification();
     
     /**
      * print text representation of AST to stdout
@@ -77,6 +80,7 @@ public class ASTDisplay implements Visitor<String,Object> {
 	/////////////////////////////////////////////////////////////////////////////// 
 
     public Object visitPackage(Package prog, String arg){
+
         show(arg, prog);
         ClassDeclList cl = prog.classDeclList;
         show(arg,"  ClassDeclList [" + cl.size() + "]");
@@ -190,7 +194,7 @@ public class ASTDisplay implements Visitor<String,Object> {
         return null;
     }
     
-    public Object visitVardeclStmt(VarDeclStmt stmt, String arg){
+    public Object visitVarDeclStmt(VarDeclStmt stmt, String arg){
         show(arg, stmt);
         stmt.varDecl.visit(this, indent(arg));	
         stmt.initExp.visit(this, indent(arg));
@@ -362,6 +366,11 @@ public class ASTDisplay implements Visitor<String,Object> {
     
     public Object visitBooleanLiteral(BooleanLiteral bool, String arg){
         show(arg, quote(bool.spelling) + " " + bool.toString());
+        return null;
+    }
+
+    public Object visitNullReference(NullReference nl, String arg) {
+        show(arg, quote("null") + " " + nl.toString());
         return null;
     }
 }

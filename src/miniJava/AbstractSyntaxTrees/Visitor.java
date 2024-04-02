@@ -28,7 +28,7 @@ public interface Visitor<ArgType,ResultType> {
     
   // Statements
     public ResultType visitBlockStmt(BlockStmt stmt, ArgType arg);
-    public ResultType visitVardeclStmt(VarDeclStmt stmt, ArgType arg);
+    public ResultType visitVarDeclStmt(VarDeclStmt stmt, ArgType arg);
     public ResultType visitAssignStmt(AssignStmt stmt, ArgType arg);
     public ResultType visitIxAssignStmt(IxAssignStmt stmt, ArgType arg);
     public ResultType visitCallStmt(CallStmt stmt, ArgType arg);
@@ -56,4 +56,5 @@ public interface Visitor<ArgType,ResultType> {
     public ResultType visitOperator(Operator op, ArgType arg);
     public ResultType visitIntLiteral(IntLiteral num, ArgType arg);
     public ResultType visitBooleanLiteral(BooleanLiteral bool, ArgType arg);
+    public ResultType visitNullReference(NullReference nl, ArgType arg);
 }

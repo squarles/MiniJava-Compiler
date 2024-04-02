@@ -368,12 +368,17 @@ public class Parser {
 	}
 
 	private Expression parseNonBinaryExpression() throws SyntaxError {
+
 		if(_currentToken.getTokenType() == BINOP) {
 			_errors.reportError("Syntax Error - expected expression");
 			throw new SyntaxError();
 		}
 
-		if(_currentToken.getTokenType() == UNOP) {
+		if(_currentToken.getTokenType().equals(NULL)) {
+			return new RefExpr(new NullReference(null), null);
+		}
+
+		else if(_currentToken.getTokenType() == UNOP) {
 			Operator op = new Operator(accept(UNOP));
 			return new UnaryExpr(op, parseNonBinaryExpression(), null);
 		}

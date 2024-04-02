@@ -103,6 +103,8 @@ public class Scanner {
 			} else if (_currentText.toString().equals("true")
 					|| _currentText.toString().equals("false")) {
 				return makeToken(BOOLLITERAL);
+			} else if (_currentText.toString().equals("null")) {
+				return makeToken(NULL);
 			} else {
 				return makeToken(IDENTIFIER);
 			}
@@ -267,6 +269,7 @@ public class Scanner {
 	private void nextChar() {
 		try {
 			int c = _in.read();
+			//System.out.print((char) c);
 			_currentChar = (char)c;
 			if (c > 255) {
 				_errors.reportError("Lexical Error - non-ASCII character");

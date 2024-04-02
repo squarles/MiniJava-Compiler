@@ -52,5 +52,7 @@ public enum TokenType {
 
     EOF,
 
+    NULL,
+
     INVALID_TOKEN   // Lexical Error
 }
