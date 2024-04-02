@@ -3,6 +3,9 @@ package miniJava.ContextualAnalysis;
 import miniJava.ErrorReporter;
 import miniJava.AbstractSyntaxTrees.Package;
 import miniJava.AbstractSyntaxTrees.*;
+import miniJava.SyntacticAnalyzer.Token;
+import miniJava.SyntacticAnalyzer.TokenType;
+
 import static miniJava.AbstractSyntaxTrees.TypeKind.*;
 
 import java.lang.reflect.Method;
@@ -32,12 +35,14 @@ public class Identification implements Visitor<Object,Object> {
 	// Package
 	public Object visitPackage(Package prog, Object unused) {
 		FieldDeclList SystemList = new FieldDeclList();
-		FieldDecl SystemOut = new FieldDecl(
+		FieldDecl out = new FieldDecl(
 				false, true,
-				new BaseType(UNSUPPORTED, null),
+				new ClassType(
+						new Identifier(new Token(TokenType.IDENTIFIER, "_PrintStream")),
+						null),
 				"out",
 				null);
-		SystemList.add(SystemOut);
+		SystemList.add(out);
 		ClassDecl System = new ClassDecl("System", SystemList, new MethodDeclList(), null);
 
 		MethodDeclList _PrintStreamList = new MethodDeclList();
@@ -74,7 +79,7 @@ public class Identification implements Visitor<Object,Object> {
 				}
 			}
 		}
-		SI.addDeclaration(SystemOut, System);
+		SI.addDeclaration(out, System);
 		SI.addDeclaration(println, _PrintStream);
 
 		for(ClassDecl cd : prog.classDeclList) {
@@ -237,20 +242,18 @@ public class Identification implements Visitor<Object,Object> {
 	public Object visitThisRef(ThisRef ref, Object cd) { return cd; }
 
 	public Object visitIdRef(IdRef ref, Object cd) {
-		ref.id.visit(this, cd);
-		if(ref.id.decl instanceof ClassDecl) {
-			System.out.println(ref.id.decl.name);
-			return ref.id.decl;
-		} else if(ref.id.decl.type instanceof ClassType) {
-			Identifier className = ((ClassType) ref.id.decl.type).className;
-			return SI.findClassDeclaration(className);
-		} else {
-			return null;
-		}
+		return ref.id.visit(this, cd);
 	}
 
 	public Object visitQRef(QualRef ref, Object cd) throws IdentificationError {
 		ClassDecl left = (ClassDecl) ref.ref.visit(this, cd);
+		if(left == null) {
+			throw new IdentificationError(ref, "Identiification Error: " + ref.id.spelling);
+		}
+		ClassDecl right = (ClassDecl) ref.id.visit(this, left);
+		if(ref.id.decl == null) {
+			throw new IdentificationError(ref, "Identification Error: " + ref.id.spelling);
+		}
 		if (ref.ref instanceof IdRef) {
 			if (((IdRef) ref.ref).id.decl instanceof ClassDecl) {
 				if(ref.id.decl instanceof MemberDecl) {
@@ -262,7 +265,7 @@ public class Identification implements Visitor<Object,Object> {
 				}
 			}
 		}
-		return ref.id.visit(this, left);
+		return right;
 	}
 
 	// Terminals
@@ -270,6 +273,10 @@ public class Identification implements Visitor<Object,Object> {
 		SI.findDeclaration(id, (ClassDecl) cd);
 		if(id.decl == null) {
 			throw new IdentificationError(id, "Identification Error: " + id.spelling);
+		} else if (id.decl instanceof ClassDecl) {
+			return id.decl;
+		} else if (id.decl.type instanceof ClassType) {
+			return SI.findDeclaration(((ClassType) id.decl.type).className, (ClassDecl) cd);
 		} else {
 			return null;
 		}

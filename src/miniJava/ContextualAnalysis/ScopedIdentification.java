@@ -66,4 +66,10 @@ public class ScopedIdentification {
         }
         return null;
     }
+
+    public void printStack(){
+        for (int i = 0; i < stack.size(); i++) {
+            System.out.println(i + ": " + stack.get(i).keySet());
+        }
+    }
 }
