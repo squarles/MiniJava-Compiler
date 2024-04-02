@@ -175,6 +175,17 @@ public class Identification implements Visitor<Object,Object> {
 	}
 	public Object visitCallStmt(CallStmt stmt, Object cd) {
 		stmt.methodRef.visit(this, cd);
+		if(stmt.methodRef instanceof ThisRef) {
+			throw new IdentificationError(stmt, "Identification Error: not a method");
+		} else if (stmt.methodRef instanceof QualRef) {
+			if (!(((QualRef) stmt.methodRef).id.decl instanceof MethodDecl)) {
+				throw new IdentificationError(stmt, "Identification Error: not a method");
+			}
+		} else {
+			if (!(((IdRef) stmt.methodRef).id.decl instanceof MethodDecl)) {
+				throw new IdentificationError(stmt, "Identification Error: not a method");
+			}
+		}
 		for(int i = 0; i < stmt.argList.size(); i++) {
 			stmt.argList.get(i).visit(this, cd);
 		}
