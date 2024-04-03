@@ -303,9 +303,9 @@ public class TypeChecking implements Visitor<Object, Object> {
 	// Terminals
 	public Object visitIdentifier(Identifier id, Object unused) {
         if (id.decl instanceof MethodDecl) {
-            return METHOD;
+            return new BaseType(METHOD, null);
         } else if (id.decl instanceof ClassDecl) {
-            return CLASSNAME;
+            return new BaseType(CLASSNAME, null);
         } else {
             return id.decl.type;
         }
