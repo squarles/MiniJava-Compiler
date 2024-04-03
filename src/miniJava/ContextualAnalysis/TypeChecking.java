@@ -351,6 +351,10 @@ public class TypeChecking implements Visitor<Object, Object> {
             return false;
         } else if (x.typeKind == CLASS && y.typeKind == CLASS) {
             return ((ClassType) x).className.spelling.equals(((ClassType) y).className.spelling);
+        } else if (x.typeKind == NULL && y.typeKind == CLASS) {
+            return true;
+        } else if (x.typeKind == CLASS && y.typeKind == NULL) {
+            return true;
         } else if (x.typeKind == ARRAY && y.typeKind == ARRAY) {
             return areSameType(((ArrayType) x).eltType, ((ArrayType) y).eltType);
         } else {
