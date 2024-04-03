@@ -283,7 +283,7 @@ public class Identification implements Visitor<Object,Object> {
 		if (left == null) {
 			throw new IdentificationError(ref, "Identification Error: " + ref.id.spelling);
 		}
-		ClassDecl right = (ClassDecl) visitForeignIdentifier(ref.id, cd);
+		ClassDecl right = (ClassDecl) visitForeignIdentifier(ref.id, left);
 		if (ref.id.decl == null) {
 			throw new IdentificationError(ref, "Identification Error: " + ref.id.spelling);
 		} else if (ref.id.decl instanceof ClassDecl || ref.id.decl instanceof MethodDecl) {
@@ -305,7 +305,7 @@ public class Identification implements Visitor<Object,Object> {
 
 	// Terminals
 	public Object visitIdentifier(Identifier id, Object cd) throws IdentificationError {
-		if (id.spelling.equals(varDeclared) && id.decl instanceof VarDecl) {
+		if (id.spelling.equals(varDeclared)) {
 			throw new IdentificationError(id, "Can't use var in its declaration");
 		}
 		SI.findDeclaration(id, (ClassDecl) cd);
@@ -325,9 +325,6 @@ public class Identification implements Visitor<Object,Object> {
 	public Object visitNullReference(NullReference nl, Object cd) { return null; }
 
 	private Object visitForeignIdentifier(Identifier id, Object cd) throws IdentificationError {
-		if (id.spelling.equals(varDeclared) && id.decl instanceof VarDecl) {
-			throw new IdentificationError(id, "Can't use var in its declaration");
-		}
 		SI.findMethodDeclaration(id, (ClassDecl) cd);
 		if(id.decl == null) {
 			throw new IdentificationError(id, "Identification Error: " + id.spelling);
