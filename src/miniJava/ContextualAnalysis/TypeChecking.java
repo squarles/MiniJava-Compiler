@@ -221,7 +221,11 @@ public class TypeChecking implements Visitor<Object, Object> {
             reportTypeError(expr, "Array size must be an integer");
             return new BaseType(ERROR, null);
         }
-        expr.ref.visit(this, null);
+        TypeDenoter refType = (TypeDenoter) expr.ref.visit(this, null);
+        if (!(refType instanceof ArrayType)) {
+            reportTypeError(expr, "Reference is not an array");
+            return new BaseType(ERROR, null);
+        }
         if (expr.ref instanceof QualRef) {
             return ((ArrayType) ((QualRef) expr.ref).id.decl.type).eltType;
         } else if (expr.ref instanceof IdRef) {

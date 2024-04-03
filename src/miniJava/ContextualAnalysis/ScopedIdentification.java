@@ -59,6 +59,10 @@ public class ScopedIdentification {
                 return id.decl;
             }
         }
+        return findMethodDeclaration(id, cd);
+    }
+
+    public Declaration findMethodDeclaration(Identifier id, ClassDecl cd){
         if(stack.get(1).get(cd.name + "." + id.spelling) != null) {
             id.decl = stack.get(1).get(cd.name + "." + id.spelling);
             return id.decl;

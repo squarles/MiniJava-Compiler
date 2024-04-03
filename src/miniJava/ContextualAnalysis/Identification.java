@@ -280,11 +280,11 @@ public class Identification implements Visitor<Object,Object> {
 
 	public Object visitQRef(QualRef ref, Object cd) throws IdentificationError {
 		ClassDecl left = (ClassDecl) ref.ref.visit(this, cd);
-		if(left == null) {
+		if (left == null) {
 			throw new IdentificationError(ref, "Identification Error: " + ref.id.spelling);
 		}
-		ClassDecl right = (ClassDecl) ref.id.visit(this, left);
-		if(ref.id.decl == null) {
+		ClassDecl right = (ClassDecl) visitForeignIdentifier(ref.id, cd);
+		if (ref.id.decl == null) {
 			throw new IdentificationError(ref, "Identification Error: " + ref.id.spelling);
 		} else if (ref.id.decl instanceof ClassDecl || ref.id.decl instanceof MethodDecl) {
 			return null;
@@ -305,7 +305,7 @@ public class Identification implements Visitor<Object,Object> {
 
 	// Terminals
 	public Object visitIdentifier(Identifier id, Object cd) throws IdentificationError {
-		if (id.spelling.equals(varDeclared)) {
+		if (id.spelling.equals(varDeclared) && id.decl instanceof VarDecl) {
 			throw new IdentificationError(id, "Can't use var in its declaration");
 		}
 		SI.findDeclaration(id, (ClassDecl) cd);
@@ -323,6 +323,23 @@ public class Identification implements Visitor<Object,Object> {
 	public Object visitIntLiteral(IntLiteral num, Object cd) { return null; }
 	public Object visitBooleanLiteral(BooleanLiteral bool, Object cd) { return null; }
 	public Object visitNullReference(NullReference nl, Object cd) { return null; }
+
+	private Object visitForeignIdentifier(Identifier id, Object cd) throws IdentificationError {
+		if (id.spelling.equals(varDeclared) && id.decl instanceof VarDecl) {
+			throw new IdentificationError(id, "Can't use var in its declaration");
+		}
+		SI.findMethodDeclaration(id, (ClassDecl) cd);
+		if(id.decl == null) {
+			throw new IdentificationError(id, "Identification Error: " + id.spelling);
+		} else if (id.decl instanceof ClassDecl) {
+			return id.decl;
+		} else if (id.decl.type instanceof ClassType) {
+			return SI.findDeclaration(((ClassType) id.decl.type).className, (ClassDecl) cd);
+		} else {
+			return null;
+		}
+	}
+
 
 	static class IdentificationError extends Error {
 		private static final long serialVersionUID = -441346906191470192L;
