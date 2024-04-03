@@ -39,7 +39,7 @@ public class Identification implements Visitor<Object,Object> {
 				"out",
 				null);
 		SystemList.add(out);
-		ClassDecl System = new ClassDecl("System", SystemList, new MethodDeclList(), null);
+		ClassDecl classSystem = new ClassDecl("System", SystemList, new MethodDeclList(), null);
 
 		MethodDeclList _PrintStreamList = new MethodDeclList();
 		ParameterDeclList printlnList = new ParameterDeclList();
@@ -50,17 +50,17 @@ public class Identification implements Visitor<Object,Object> {
 		MethodDecl println = new MethodDecl(
 				printlnField, printlnList, new StatementList(), null);
 		_PrintStreamList.add(println);
-		ClassDecl _PrintStream = new ClassDecl("_PrintStream", new FieldDeclList(), new MethodDeclList(), null);
+		ClassDecl class_PrintStream = new ClassDecl("_PrintStream", new FieldDeclList(), new MethodDeclList(), null);
 
-		ClassDecl String = new ClassDecl("String", new FieldDeclList(), new MethodDeclList(), null);
+		ClassDecl classString = new ClassDecl("String", new FieldDeclList(), new MethodDeclList(), null);
 
 		SI.openScope();
 		for(ClassDecl cd : prog.classDeclList) {
 			SI.addDeclaration(cd);
 		}
-		SI.addDeclaration(System);
-		SI.addDeclaration(_PrintStream);
-		SI.addDeclaration(String);
+		SI.addDeclaration(classSystem);
+		SI.addDeclaration(class_PrintStream);
+		SI.addDeclaration(classString);
 
 		SI.openScope();
 		for(ClassDecl cd : prog.classDeclList) {
@@ -75,8 +75,8 @@ public class Identification implements Visitor<Object,Object> {
 				}
 			}
 		}
-		SI.addDeclaration(out, System);
-		SI.addDeclaration(println, _PrintStream);
+		SI.addDeclaration(out, classSystem);
+		SI.addDeclaration(println, class_PrintStream);
 
 		for(ClassDecl cd : prog.classDeclList) {
 			cd.visit(this, null);
@@ -138,6 +138,7 @@ public class Identification implements Visitor<Object,Object> {
 		return null;
 	}
 	public Object visitVarDecl(VarDecl decl, Object cd) {
+		decl.type.visit(this, cd);
 		SI.addDeclaration(decl);
 		return null;
 	}
@@ -150,7 +151,10 @@ public class Identification implements Visitor<Object,Object> {
 		}
 		return null;
 	}
-	public Object visitArrayType(ArrayType type, Object cd) { return null; }
+	public Object visitArrayType(ArrayType type, Object cd) {
+		type.eltType.visit(this, null);
+		return null;
+	}
 	// Statements
 	public Object visitBlockStmt(BlockStmt stmt, Object cd) {
 		SI.openScope();

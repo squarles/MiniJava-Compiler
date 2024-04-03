@@ -7,6 +7,9 @@ import miniJava.ContextualAnalysis.*;
 
 import java.io.*;
 
+// 335, 336, 340, 350, 351, 390
+// 322, 327, 355
+
 public class Compiler {
 	// Main function, the file to compile will be an argument.
 	public static void main(String[] args) throws FileNotFoundException {

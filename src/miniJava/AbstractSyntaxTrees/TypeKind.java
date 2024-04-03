@@ -11,6 +11,9 @@ public enum TypeKind {
         BOOLEAN,
         CLASS,
         ARRAY,
+        NULL,
+        CLASSNAME,
+        METHOD,
         UNSUPPORTED,
         ERROR;
 }
