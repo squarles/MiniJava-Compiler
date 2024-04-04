@@ -136,7 +136,10 @@ public class TypeChecking implements Visitor<Object, Object> {
         return null;
     }
 	public Object visitReturnStmt(ReturnStmt stmt, Object unused) {
-        TypeDenoter returned = (TypeDenoter) stmt.returnExpr.visit(this, null);
+        TypeDenoter returned = null;
+        if (stmt.returnExpr != null) {
+            returned = (TypeDenoter) stmt.returnExpr.visit(this, null);
+        }
         if (!areSameType(returned, currentMethod.type)) {
             reportTypeError(stmt, "Wrong return type");
         }
@@ -345,6 +348,9 @@ public class TypeChecking implements Visitor<Object, Object> {
 	}
 
     private boolean areSameType(TypeDenoter x, TypeDenoter y) {
+        if (x == null && y.typeKind == VOID || x.typeKind == VOID && y == null) {
+            return true;
+        }
         if (x.typeKind == ERROR || y.typeKind == ERROR) {
             return true;
         } else if (x.typeKind == UNSUPPORTED || y.typeKind == UNSUPPORTED) {

@@ -201,7 +201,9 @@ public class Identification implements Visitor<Object,Object> {
 		return null;
 	}
 	public Object visitReturnStmt(ReturnStmt stmt, Object cd) {
-		stmt.returnExpr.visit(this, cd);
+		if(stmt.returnExpr != null) {
+			stmt.returnExpr.visit(this, cd);
+		}
 		return null;
 	}
 	public Object visitIfStmt(IfStmt stmt, Object cd) {
