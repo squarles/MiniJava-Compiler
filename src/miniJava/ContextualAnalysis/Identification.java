@@ -275,7 +275,12 @@ public class Identification implements Visitor<Object,Object> {
 	}
 
 	public Object visitIdRef(IdRef ref, Object cd) {
-		return ref.id.visit(this, cd);
+		Object visit = ref.id.visit(this, cd);
+		if (ref.id.decl instanceof MemberDecl && inStatic && !((MemberDecl) ref.id.decl).isStatic) {
+			throw new IdentificationError(ref, "Identification Error: " + ref.id.spelling);
+		} else {
+			return visit;
+		}
 	}
 
 	public Object visitQRef(QualRef ref, Object cd) throws IdentificationError {
