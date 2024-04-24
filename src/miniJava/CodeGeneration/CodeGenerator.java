@@ -246,7 +246,7 @@ public class CodeGenerator implements Visitor<Object, Object> {
 				DeclIsPrintLn = true;
 			}
 		} else {
-			md = (MethodDecl) ((QualRef) stmt.methodRef).id.decl;
+			md = (MethodDecl) ((IdRef) stmt.methodRef).id.decl;
 			if(md.isPrintln) {
 				DeclIsPrintLn = true;
 			}
