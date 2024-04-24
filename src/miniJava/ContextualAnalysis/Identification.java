@@ -14,6 +14,7 @@ public class Identification implements Visitor<Object,Object> {
 
 	private boolean inStatic = false;
 	private String varDeclared = null;
+	private int mains = 0;
 	
 	public Identification(ErrorReporter errors) {
 		this.SI = new ScopedIdentification();
@@ -49,6 +50,7 @@ public class Identification implements Visitor<Object,Object> {
 				false, false, new BaseType(VOID, null), "println", null);
 		MethodDecl println = new MethodDecl(
 				printlnField, printlnList, new StatementList(), null);
+		println.isPrintln = true;
 		_PrintStreamList.add(println);
 		ClassDecl class_PrintStream = new ClassDecl("_PrintStream", new FieldDeclList(), new MethodDeclList(), null);
 
@@ -71,8 +73,27 @@ public class Identification implements Visitor<Object,Object> {
 			}
 			for(MethodDecl md : cd.methodDeclList) {
 				if(!md.isPrivate) {
+					if (
+						md.name.equals("main") &&
+						md.isStatic &&
+						md.type.typeKind == VOID &&
+						md.parameterDeclList.size() == 1) {
+						if (md.parameterDeclList.get(0).type instanceof ArrayType) {
+							ArrayType at = (ArrayType) md.parameterDeclList.get(0).type;
+							if (at.eltType instanceof ClassType) {
+								ClassType ct = (ClassType) at.eltType;
+								if (ct.className.spelling.equals("String")) {
+									mains += 1;
+									md.isMain = true;
+								}
+							}
+						}
+					}
 					SI.addDeclaration(md, cd);
 				}
+			}
+			if (mains != 1) {
+				throw new IdentificationError(prog, "No main or more than one main.");
 			}
 		}
 		SI.addDeclaration(out, classSystem);
@@ -128,6 +149,10 @@ public class Identification implements Visitor<Object,Object> {
 		}
 		for (int i = 0; i < md.statementList.size(); i++) {
 			md.statementList.get(i).visit(this, cd);
+		}
+		if(md.type.typeKind != VOID &&
+				!(md.statementList.get(md.statementList.size() - 1) instanceof ReturnStmt)) {
+			throw new IdentificationError(md, "Method " + md.name + " does not end with return stmt");
 		}
 		SI.closeScope();
 		return null;

@@ -1,6 +1,7 @@
 package miniJava;
 
 import miniJava.AbstractSyntaxTrees.Package;
+import miniJava.CodeGeneration.CodeGenerator;
 import miniJava.SyntacticAnalyzer.*;
 import miniJava.AbstractSyntaxTrees.*;
 import miniJava.ContextualAnalysis.*;
@@ -38,7 +39,15 @@ public class Compiler {
 					reporter.outputErrors();
 				}
 				else {
-					System.out.println("Success");
+					CodeGenerator codeGen = new CodeGenerator(reporter);
+					codeGen.parse((Package) tree);
+					if(reporter.hasErrors()) {
+						System.out.println("Error");
+						reporter.outputErrors();
+					}
+					else {
+						System.out.println("Success");
+					}
 					//ASTDisplay display = new ASTDisplay();
 					//display.showTree(tree);
 				}
