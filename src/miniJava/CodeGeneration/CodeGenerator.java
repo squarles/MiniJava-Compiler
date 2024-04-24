@@ -354,6 +354,7 @@ public class CodeGenerator implements Visitor<Object, Object> {
 			_asm.add(new Xor(new R(Reg64.RAX, Reg64.RAX)));
 			_asm.add(new Cmp(new R(Reg64.RDX, Reg64.RCX)));
 			_asm.add(new SetCond(cond,Reg8.AL));
+			_asm.add(new Push(Reg64.RAX));
 			return null;
 		}
 		_asm.add(new Pop(Reg64.RCX));
