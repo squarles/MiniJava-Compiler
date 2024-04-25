@@ -336,10 +336,10 @@ public class CodeGenerator implements Visitor<Object, Object> {
 	public Object visitUnaryExpr(UnaryExpr expr, Object arg){
 		expr.expr.visit(this, null);
 		if(expr.operator.spelling.equals('-')) {
-			_asm.add(new Neg(new R(Reg64.RSP, true)));
+			_asm.add(new Neg(new R(Reg64.RSP, 0)));
 		} else {
-			_asm.add(new Not(new R(Reg64.RSP, true)));
-			_asm.add(new And(new R(Reg64.RSP, true), 1));
+			_asm.add(new Not(new R(Reg64.RSP, 0)));
+			_asm.add(new And(new R(Reg64.RSP, 0), 1));
 		}
 		return null;
 	}
