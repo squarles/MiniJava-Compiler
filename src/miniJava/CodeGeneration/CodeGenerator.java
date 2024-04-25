@@ -461,7 +461,6 @@ public class CodeGenerator implements Visitor<Object, Object> {
 	}
 	@Override //TODO: static variables
 	public Object visitIdRef(IdRef ref, Object arg){
-		ref.id.visit(this, null);
 		if (ref.id.decl instanceof LocalDecl) {
 			LocalDecl ld = (LocalDecl) ref.id.decl;
 			if(arg != null && (Boolean) arg == Boolean.TRUE) {
