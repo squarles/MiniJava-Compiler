@@ -34,6 +34,7 @@ public class CodeGenerator implements Visitor<Object, Object> {
 	private int EntryPoint;
 	private int CurrentRBPOffsetV = -8;
 	private int CurrentRBPOffsetP = 16;
+	private int NumStatics = 0;
 
 	private MethodDecl CurrentMethod = null;
 
@@ -106,6 +107,7 @@ public class CodeGenerator implements Visitor<Object, Object> {
 				} else {
 					fd.HeapOffset = R15Offset;
 					R15Offset += 8;
+					NumStatics++;
 				}
 			}
 		}
@@ -137,6 +139,10 @@ public class CodeGenerator implements Visitor<Object, Object> {
 		}
 		if(md.isMain) {
 			EntryPoint = md.StartAddress;
+			for (int i = 0; i < NumStatics; i++) {
+				_asm.add(new Push(0));
+			}
+			_asm.add(new Mov_rmr(new R(Reg64.R15, Reg64.RSP)));
 		}
 		_asm.add(new Push(Reg64.RBP));
 		_asm.add(new Mov_rmr(new R(Reg64.RBP,Reg64.RSP)));
