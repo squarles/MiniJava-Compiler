@@ -331,7 +331,7 @@ public class CodeGenerator implements Visitor<Object, Object> {
 	@Override
 	public Object visitUnaryExpr(UnaryExpr expr, Object arg){
 		expr.expr.visit(this, null);
-		if(expr.operator.spelling.equals('-')) {
+		if(expr.operator.spelling.equals("-")) {
 			_asm.add(new Neg(new R(Reg64.RSP, 0)));
 		} else {
 			_asm.add(new Not(new R(Reg64.RSP, 0)));
