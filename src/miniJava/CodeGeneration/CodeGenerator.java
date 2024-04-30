@@ -18,26 +18,13 @@ import miniJava.CodeGeneration.x64.*;
 import miniJava.CodeGeneration.x64.ISA.*;
 
 /*
-CallExpr/Stmt - need all args to be on the stack in reverse order
-Loop through backwards for(i--)
+put static variables on the stack first
+top of stack = start of bss
+static access = top stack offset
+save the top of the stack in a register = R15
 
-Special Consideration -
-	If In instance method and functionRef instanceof idref AND function I'm calling !static
-	Method must be in the same instance - > push RBP+16 (this)
-
-Every Method has a start address
-	If I haven't visited , don't know where it starts
-	Initialize start address to -1, so we know if it hasn't been visited yet
-	Instruction - Call 0
-	Keep a list of these per method, when the method is visited, go through the list and patch the calls
-	Modify your MethodDecl ast to have List<Instruction>
-
-	Call - push arguments to stack in reverse order
-	call the method
-	For expr - PUSH RAX
-
-
-
+methods - if it's not static, pass this as a parameter
+static -
  */
 
 public class CodeGenerator implements Visitor<Object, Object> {
@@ -47,6 +34,8 @@ public class CodeGenerator implements Visitor<Object, Object> {
 	private int EntryPoint;
 	private int CurrentRBPOffsetV = -8;
 	private int CurrentRBPOffsetP = 16;
+	private int NumStaticFields = 0;
+	private FieldDeclList Statics = new FieldDeclList();
 
 	private MethodDecl CurrentMethod = null;
 
@@ -115,6 +104,9 @@ public class CodeGenerator implements Visitor<Object, Object> {
 				if(!fd.isStatic) {
 					fd.HeapOffset = CurrentOffset;
 					CurrentOffset += 8;
+				} else {
+					NumStaticFields++;
+					Statics.add(fd);
 				}
 			}
 		}
@@ -133,7 +125,7 @@ public class CodeGenerator implements Visitor<Object, Object> {
 	}
 	@Override
 	public Object visitFieldDecl(FieldDecl fd, Object arg){ return null; }
-	@Override //TODO
+	@Override
 	public Object visitMethodDecl(MethodDecl md, Object arg){
 		CurrentRBPOffsetP = 16;
 		if(!md.isStatic) {
@@ -146,10 +138,16 @@ public class CodeGenerator implements Visitor<Object, Object> {
 		}
 		if(md.isMain) {
 			EntryPoint = md.StartAddress;
+			int R15Offset = 0;
+			for (FieldDecl fd : Statics) {
+				fd.HeapOffset = R15Offset;
+				R15Offset += 8;
+				_asm.add(new Push(0));
+			}
+			_asm.add(new Mov_rmr(new R(Reg64.R15, Reg64.RSP)));
 		}
 		_asm.add(new Push(Reg64.RBP));
 		_asm.add(new Mov_rmr(new R(Reg64.RBP,Reg64.RSP)));
-		//this when it's NOT static
 		CurrentMethod = md;
 		for(ParameterDecl pd : md.parameterDeclList) {
 			pd.visit(this, null);
@@ -236,7 +234,7 @@ public class CodeGenerator implements Visitor<Object, Object> {
 		_asm.add(new Mov_rmr(new R(Reg64.RCX, Reg64.RAX, 8, 0, Reg64.RDX)));
 		return null;
 	}
-	@Override //TODO
+	@Override
 	public Object visitCallStmt(CallStmt stmt, Object arg){
 		boolean DeclIsPrintLn = false;
 		MethodDecl md;
@@ -390,7 +388,7 @@ public class CodeGenerator implements Visitor<Object, Object> {
 		_asm.add(new Push(new R(Reg64.RCX, Reg64.RAX, 8, 0)));
 		return null;
 	}
-	@Override //TODO: statics
+	@Override
 	public Object visitCallExpr(CallExpr expr, Object arg){
 		boolean DeclIsPrintLn = false;
 		MethodDecl md;
@@ -459,7 +457,7 @@ public class CodeGenerator implements Visitor<Object, Object> {
 		_asm.add(new Push(new R(Reg64.RBP, 16)));
 		return null;
 	}
-	@Override //TODO: static variables
+	@Override
 	public Object visitIdRef(IdRef ref, Object arg){
 		if (ref.id.decl instanceof LocalDecl) {
 			LocalDecl ld = (LocalDecl) ref.id.decl;
@@ -471,12 +469,19 @@ public class CodeGenerator implements Visitor<Object, Object> {
 			_asm.add(new Push(Reg64.RAX));
 		} else { //ref.id.decl instanceof FieldDecl
 			FieldDecl fd = (FieldDecl) ref.id.decl;
-			// assume it's an instance variable
-			_asm.add(new Mov_rrm(new R(Reg64.RBP, 16, Reg64.RAX)));
-			if(arg != null && (Boolean) arg == Boolean.TRUE) {
-				_asm.add(new Lea(new R(Reg64.RAX, fd.HeapOffset,Reg64.RCX)));
+			if (fd.isStatic) {
+				if(arg != null && (Boolean) arg == Boolean.TRUE) {
+					_asm.add(new Lea(new R(Reg64.R15, fd.HeapOffset,Reg64.RCX)));
+				} else {
+					_asm.add(new Mov_rrm(new R(Reg64.R15, fd.HeapOffset, Reg64.RCX)));
+				}
 			} else {
-				_asm.add(new Mov_rrm(new R(Reg64.RAX, fd.HeapOffset, Reg64.RCX)));
+				_asm.add(new Mov_rrm(new R(Reg64.RBP, 16, Reg64.RAX)));
+				if (arg != null && (Boolean) arg == Boolean.TRUE) {
+					_asm.add(new Lea(new R(Reg64.RAX, fd.HeapOffset, Reg64.RCX)));
+				} else {
+					_asm.add(new Mov_rrm(new R(Reg64.RAX, fd.HeapOffset, Reg64.RCX)));
+				}
 			}
 			_asm.add(new Push(Reg64.RCX));
 
@@ -484,7 +489,7 @@ public class CodeGenerator implements Visitor<Object, Object> {
 		return null;
 	}
 
-	@Override //TODO: statics
+	@Override
 	public Object visitQRef(QualRef ref, Object arg){
 		/*
 		LHS will be an object of some kind
@@ -497,10 +502,18 @@ public class CodeGenerator implements Visitor<Object, Object> {
 		ref.ref.visit(this, null);
 		_asm.add(new Pop(Reg64.RAX));
 		FieldDecl fd = (FieldDecl) ref.id.decl;
-		if(arg != null && (Boolean) arg == Boolean.TRUE) {
-			_asm.add(new Lea(new R(Reg64.RAX, fd.HeapOffset, Reg64.RCX)));
+		if(fd.isStatic) {
+			if (arg != null && (Boolean) arg == Boolean.TRUE) {
+				_asm.add(new Lea(new R(Reg64.R15, fd.HeapOffset, Reg64.RCX)));
+			} else {
+				_asm.add(new Mov_rrm(new R(Reg64.R15, fd.HeapOffset, Reg64.RCX)));
+			}
 		} else {
-			_asm.add(new Mov_rrm(new R(Reg64.RAX, fd.HeapOffset, Reg64.RCX)));
+			if (arg != null && (Boolean) arg == Boolean.TRUE) {
+				_asm.add(new Lea(new R(Reg64.RAX, fd.HeapOffset, Reg64.RCX)));
+			} else {
+				_asm.add(new Mov_rrm(new R(Reg64.RAX, fd.HeapOffset, Reg64.RCX)));
+			}
 		}
 		_asm.add(new Push(Reg64.RCX));
 		return null;
