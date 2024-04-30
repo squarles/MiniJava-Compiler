@@ -199,7 +199,7 @@ public class CodeGenerator implements Visitor<Object, Object> {
 			s.visit(this, null);
 		}
 		if(CurrentRBPOffsetV != StartingOffset) {
-			int difference = CurrentRBPOffsetV - StartingOffset;
+			int difference = StartingOffset - CurrentRBPOffsetV;
 			CurrentRBPOffsetV = StartingOffset;
 			_asm.add(new Add(new R(Reg64.RSP, true), difference));
 		}
