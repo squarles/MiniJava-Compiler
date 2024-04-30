@@ -1,7 +1,7 @@
 package miniJava.CodeGeneration.x64.ISA;
 
 import miniJava.CodeGeneration.x64.Instruction;
-import miniJava.CodeGeneration.x64.R;
+import miniJava.CodeGeneration.x64.ModRMSIB;
 import miniJava.CodeGeneration.x64.Reg64;
 import miniJava.CodeGeneration.x64.x64;
 
@@ -13,7 +13,7 @@ public class Pop extends Instruction {
 		opcodeBytes.write(0x58 + x64.getIdx(r));
 	}
 	
-	public Pop(R modrmsib) {
+	public Pop(ModRMSIB modrmsib) {
 		opcodeBytes.write(0x8F);
 		modrmsib.SetRegR(x64.mod543ToReg(0));
 		byte[] rmsib = modrmsib.getBytes();

@@ -2,7 +2,7 @@ package miniJava.CodeGeneration.x64;
 
 import java.io.ByteArrayOutputStream;
 
-public class R { //ModRMSIB
+public class ModRMSIB {
 	private ByteArrayOutputStream _b;
 	private boolean rexW = false;
 	private boolean rexR = false;
@@ -48,7 +48,7 @@ public class R { //ModRMSIB
 	private int disp = 0, mult = 0;
 	
 	// [rdisp+ridx*mult+disp],r32/64
-	public R(Reg64 rdisp, Reg64 ridx, int mult, int disp, Reg r) {
+	public ModRMSIB(Reg64 rdisp, Reg64 ridx, int mult, int disp, Reg r) {
 		SetRegR(r);
 		SetRegDisp(rdisp);
 		SetRegIdx(ridx);
@@ -58,7 +58,7 @@ public class R { //ModRMSIB
 	
 	// r must be set by some mod543 instruction set later
 	// [rdisp+ridx*mult+disp]
-	public R(Reg64 rdisp, Reg64 ridx, int mult, int disp) {
+	public ModRMSIB(Reg64 rdisp, Reg64 ridx, int mult, int disp) {
 		SetRegDisp(rdisp);
 		SetRegIdx(ridx);
 		SetDisp(disp);
@@ -66,7 +66,7 @@ public class R { //ModRMSIB
 	}
 	
 	// [rdisp+disp],r
-	public R(Reg64 rdisp, int disp, Reg r) {
+	public ModRMSIB(Reg64 rdisp, int disp, Reg r) {
 		SetRegDisp(rdisp);
 		SetRegR(r);
 		SetDisp(disp);
@@ -74,19 +74,19 @@ public class R { //ModRMSIB
 	
 	// r will be set by some instruction to a mod543
 	// [rdisp+disp]
-	public R(Reg64 rdisp, int disp) {
+	public ModRMSIB(Reg64 rdisp, int disp) {
 		SetRegDisp(rdisp);
 		SetDisp(disp);
 	}
 	
 	// rm64,r64
-	public R(Reg64 rm, Reg r) {
+	public ModRMSIB(Reg64 rm, Reg r) {
 		SetRegRM(rm);
 		SetRegR(r);
 	}
 	
 	// rm or r
-	public R(Reg64 r_or_rm, boolean isRm) {
+	public ModRMSIB(Reg64 r_or_rm, boolean isRm) {
 		if( isRm )
 			SetRegRM(r_or_rm);
 		else

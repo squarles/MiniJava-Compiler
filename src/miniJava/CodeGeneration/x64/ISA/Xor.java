@@ -1,6 +1,6 @@
 package miniJava.CodeGeneration.x64.ISA;
 
-import miniJava.CodeGeneration.x64.R;
+import miniJava.CodeGeneration.x64.ModRMSIB;
 
 public class Xor extends SimpleMathInstruction {
 	@Override
@@ -8,11 +8,11 @@ public class Xor extends SimpleMathInstruction {
 		return SimpleMathOp.XOR;
 	}
 	
-	public Xor(R modrmsib) {
+	public Xor(ModRMSIB modrmsib) {
 		super(modrmsib);
 	}
 
-	public Xor(R modrmsib, int imm) {
+	public Xor(ModRMSIB modrmsib, int imm) {
 		super(modrmsib,imm);
 	}
 }

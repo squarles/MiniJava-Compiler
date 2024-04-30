@@ -17,16 +17,6 @@ import miniJava.AbstractSyntaxTrees.Package;
 import miniJava.CodeGeneration.x64.*;
 import miniJava.CodeGeneration.x64.ISA.*;
 
-/*
-put static variables on the stack first
-top of stack = start of bss
-static access = top stack offset
-save the top of the stack in a register = R15
-
-methods - if it's not static, pass this as a parameter
-static -
- */
-
 public class CodeGenerator implements Visitor<Object, Object> {
 	private ErrorReporter _errors;
 	private InstructionList _asm; // our list of instructions that are used to make the code section
@@ -142,10 +132,10 @@ public class CodeGenerator implements Visitor<Object, Object> {
 			for (int i = 0; i < NumStatics; i++) {
 				_asm.add(new Push(0));
 			}
-			_asm.add(new Mov_rmr(new R(Reg64.R15, Reg64.RSP)));
+			_asm.add(new Mov_rmr(new ModRMSIB(Reg64.R15, Reg64.RSP)));
 		}
 		_asm.add(new Push(Reg64.RBP));
-		_asm.add(new Mov_rmr(new R(Reg64.RBP,Reg64.RSP)));
+		_asm.add(new Mov_rmr(new ModRMSIB(Reg64.RBP,Reg64.RSP)));
 		CurrentMethod = md;
 		for(ParameterDecl pd : md.parameterDeclList) {
 			pd.visit(this, null);
@@ -154,11 +144,11 @@ public class CodeGenerator implements Visitor<Object, Object> {
 			s.visit(this, null);
 		}
 		CurrentMethod = null;
-		_asm.add(new Mov_rmr(new R(Reg64.RSP,Reg64.RBP)));
+		_asm.add(new Mov_rmr(new ModRMSIB(Reg64.RSP,Reg64.RBP)));
 		_asm.add(new Pop(Reg64.RBP));
 		if(md.isMain) {
-			_asm.add(new Mov_rmi(new R(Reg64.RAX,true),60)); // exit
-			_asm.add(new Xor(new R(Reg64.RDI,Reg64.RDI))); // error code is 0
+			_asm.add(new Mov_rmi(new ModRMSIB(Reg64.RAX,true),60)); // exit
+			_asm.add(new Xor(new ModRMSIB(Reg64.RDI,Reg64.RDI))); // error code is 0
 			_asm.add(new Syscall());
 		} else if(md.type.typeKind == TypeKind.VOID) {
 			int numParams = md.parameterDeclList.size();
@@ -201,7 +191,7 @@ public class CodeGenerator implements Visitor<Object, Object> {
 		if(CurrentRBPOffsetV != StartingOffset) {
 			int difference = StartingOffset - CurrentRBPOffsetV;
 			CurrentRBPOffsetV = StartingOffset;
-			_asm.add(new Add(new R(Reg64.RSP, true), difference));
+			_asm.add(new Add(new ModRMSIB(Reg64.RSP, true), difference));
 		}
 		return null;
 	}
@@ -209,7 +199,7 @@ public class CodeGenerator implements Visitor<Object, Object> {
 	public Object visitVarDeclStmt(VarDeclStmt stmt, Object arg){
 		stmt.varDecl.visit(this, null);
 		stmt.initExp.visit(this, null);
-		_asm.add(new Pop(new R(Reg64.RBP, stmt.varDecl.RBPOffset)));
+		_asm.add(new Pop(new ModRMSIB(Reg64.RBP, stmt.varDecl.RBPOffset)));
 		return null;
 	}
 	@Override
@@ -218,7 +208,7 @@ public class CodeGenerator implements Visitor<Object, Object> {
 		stmt.val.visit(this, null);
 		_asm.add(new Pop(Reg64.RAX));
 		_asm.add(new Pop(Reg64.RCX));
-		_asm.add(new Mov_rmr(new R(Reg64.RCX, 0, Reg64.RAX)));
+		_asm.add(new Mov_rmr(new ModRMSIB(Reg64.RCX, 0, Reg64.RAX)));
 		return null;
 	}
 	@Override
@@ -229,7 +219,7 @@ public class CodeGenerator implements Visitor<Object, Object> {
 		_asm.add(new Pop(Reg64.RAX)); //[RCX+RAX*8+0] = RDX;
 		_asm.add(new Pop(Reg64.RCX));
 		_asm.add(new Pop(Reg64.RDX));
-		_asm.add(new Mov_rmr(new R(Reg64.RCX, Reg64.RAX, 8, 0, Reg64.RDX)));
+		_asm.add(new Mov_rmr(new ModRMSIB(Reg64.RCX, Reg64.RAX, 8, 0, Reg64.RDX)));
 		return null;
 	}
 	@Override
@@ -261,7 +251,7 @@ public class CodeGenerator implements Visitor<Object, Object> {
 				stmt.methodRef instanceof IdRef &&
 				!md.isStatic
 		) {
-			_asm.add(new Push(new R(Reg64.RBP, 16)));
+			_asm.add(new Push(new ModRMSIB(Reg64.RBP, 16)));
 		} else if (
 				stmt.methodRef instanceof QualRef &&
 						!md.isStatic
@@ -282,7 +272,7 @@ public class CodeGenerator implements Visitor<Object, Object> {
 			stmt.returnExpr.visit(this, null);
 			_asm.add(new Pop(Reg64.RAX));
 		}
-		_asm.add(new Mov_rmr(new R(Reg64.RSP,Reg64.RBP)));
+		_asm.add(new Mov_rmr(new ModRMSIB(Reg64.RSP,Reg64.RBP)));
 		_asm.add(new Pop(Reg64.RBP));
 		int numParams = CurrentMethod.parameterDeclList.size();
 		if(!CurrentMethod.isStatic) {
@@ -296,7 +286,7 @@ public class CodeGenerator implements Visitor<Object, Object> {
 
 		stmt.cond.visit(this, null);
 		_asm.add(new Pop(Reg64.RAX));
-		_asm.add(new Cmp(new R(Reg64.RAX, true), 0));
+		_asm.add(new Cmp(new ModRMSIB(Reg64.RAX, true), 0));
 		Instruction ifj = new CondJmp(Condition.E, 0);
 		_asm.add(ifj);
 		stmt.thenStmt.visit(this, null);
@@ -317,7 +307,7 @@ public class CodeGenerator implements Visitor<Object, Object> {
 		int start = _asm.getSize();
 		stmt.cond.visit(this, null);
 		_asm.add(new Pop(Reg64.RAX));
-		_asm.add(new Cmp(new R(Reg64.RAX, true), 0));
+		_asm.add(new Cmp(new ModRMSIB(Reg64.RAX, true), 0));
 		Instruction whilej = new CondJmp(Condition.E, 0);
 		_asm.add(whilej);
 
@@ -332,10 +322,10 @@ public class CodeGenerator implements Visitor<Object, Object> {
 	public Object visitUnaryExpr(UnaryExpr expr, Object arg){
 		expr.expr.visit(this, null);
 		if(expr.operator.spelling.equals("-")) {
-			_asm.add(new Neg(new R(Reg64.RSP, 0)));
+			_asm.add(new Neg(new ModRMSIB(Reg64.RSP, 0)));
 		} else {
-			_asm.add(new Not(new R(Reg64.RSP, 0)));
-			_asm.add(new And(new R(Reg64.RSP, 0), 1));
+			_asm.add(new Not(new ModRMSIB(Reg64.RSP, 0)));
+			_asm.add(new And(new ModRMSIB(Reg64.RSP, 0), 1));
 		}
 		return null;
 	}
@@ -347,8 +337,8 @@ public class CodeGenerator implements Visitor<Object, Object> {
 		if(cond != null) {
 			_asm.add(new Pop(Reg64.RCX));
 			_asm.add(new Pop(Reg64.RDX));
-			_asm.add(new Xor(new R(Reg64.RAX, Reg64.RAX)));
-			_asm.add(new Cmp(new R(Reg64.RDX, Reg64.RCX)));
+			_asm.add(new Xor(new ModRMSIB(Reg64.RAX, Reg64.RAX)));
+			_asm.add(new Cmp(new ModRMSIB(Reg64.RDX, Reg64.RCX)));
 			_asm.add(new SetCond(cond,Reg8.AL));
 			_asm.add(new Push(Reg64.RAX));
 			return null;
@@ -356,18 +346,18 @@ public class CodeGenerator implements Visitor<Object, Object> {
 		_asm.add(new Pop(Reg64.RCX));
 		_asm.add(new Pop(Reg64.RAX));
 		if(expr.operator.spelling.equals("+")) {
-			_asm.add(new Add(new R(Reg64.RAX, Reg64.RCX)));
+			_asm.add(new Add(new ModRMSIB(Reg64.RAX, Reg64.RCX)));
 		} else if(expr.operator.spelling.equals("-")) {
-			_asm.add(new Sub(new R(Reg64.RAX, Reg64.RCX)));
+			_asm.add(new Sub(new ModRMSIB(Reg64.RAX, Reg64.RCX)));
 		} else if(expr.operator.spelling.equals("*")) {
-			_asm.add(new Imul(new R(Reg64.RCX, true)));
+			_asm.add(new Imul(new ModRMSIB(Reg64.RCX, true)));
 		} else if(expr.operator.spelling.equals("/")) {
-			_asm.add(new Xor(new R(Reg64.RDX, Reg64.RDX)));
-			_asm.add(new Idiv(new R(Reg64.RCX, true)));
+			_asm.add(new Xor(new ModRMSIB(Reg64.RDX, Reg64.RDX)));
+			_asm.add(new Idiv(new ModRMSIB(Reg64.RCX, true)));
 		} else if(expr.operator.spelling.equals("||")) {
-			_asm.add(new Or(new R(Reg64.RAX, Reg64.RCX)));
+			_asm.add(new Or(new ModRMSIB(Reg64.RAX, Reg64.RCX)));
 		} else if(expr.operator.spelling.equals("&&")) {
-			_asm.add(new And(new R(Reg64.RAX, Reg64.RCX)));
+			_asm.add(new And(new ModRMSIB(Reg64.RAX, Reg64.RCX)));
 		}
 		_asm.add(new Push(Reg64.RAX));
 		return null;
@@ -383,7 +373,7 @@ public class CodeGenerator implements Visitor<Object, Object> {
 		expr.ixExpr.visit(this, null);
 		_asm.add(new Pop(Reg64.RAX));
 		_asm.add(new Pop(Reg64.RCX));
-		_asm.add(new Push(new R(Reg64.RCX, Reg64.RAX, 8, 0)));
+		_asm.add(new Push(new ModRMSIB(Reg64.RCX, Reg64.RAX, 8, 0)));
 		return null;
 	}
 	@Override
@@ -415,7 +405,7 @@ public class CodeGenerator implements Visitor<Object, Object> {
 						expr.functionRef instanceof IdRef &&
 						!md.isStatic
 		) {
-			_asm.add(new Push(new R(Reg64.RBP, 16)));
+			_asm.add(new Push(new ModRMSIB(Reg64.RBP, 16)));
 		} else if (
 				expr.functionRef instanceof QualRef &&
 				!md.isStatic
@@ -452,7 +442,7 @@ public class CodeGenerator implements Visitor<Object, Object> {
 	// References
 	@Override
 	public Object visitThisRef(ThisRef ref, Object arg){
-		_asm.add(new Push(new R(Reg64.RBP, 16)));
+		_asm.add(new Push(new ModRMSIB(Reg64.RBP, 16)));
 		return null;
 	}
 	@Override
@@ -460,25 +450,25 @@ public class CodeGenerator implements Visitor<Object, Object> {
 		if (ref.id.decl instanceof LocalDecl) {
 			LocalDecl ld = (LocalDecl) ref.id.decl;
 			if(arg != null && (Boolean) arg == Boolean.TRUE) {
-				_asm.add(new Lea(new R(Reg64.RBP, ld.RBPOffset,Reg64.RAX)));
+				_asm.add(new Lea(new ModRMSIB(Reg64.RBP, ld.RBPOffset,Reg64.RAX)));
 			} else {
-				_asm.add(new Mov_rrm(new R(Reg64.RBP, ld.RBPOffset, Reg64.RAX)));
+				_asm.add(new Mov_rrm(new ModRMSIB(Reg64.RBP, ld.RBPOffset, Reg64.RAX)));
 			}
 			_asm.add(new Push(Reg64.RAX));
 		} else { //ref.id.decl instanceof FieldDecl
 			FieldDecl fd = (FieldDecl) ref.id.decl;
 			if (fd.isStatic) {
 				if(arg != null && (Boolean) arg == Boolean.TRUE) {
-					_asm.add(new Lea(new R(Reg64.R15, fd.HeapOffset,Reg64.RCX)));
+					_asm.add(new Lea(new ModRMSIB(Reg64.R15, fd.HeapOffset,Reg64.RCX)));
 				} else {
-					_asm.add(new Mov_rrm(new R(Reg64.R15, fd.HeapOffset, Reg64.RCX)));
+					_asm.add(new Mov_rrm(new ModRMSIB(Reg64.R15, fd.HeapOffset, Reg64.RCX)));
 				}
 			} else {
-				_asm.add(new Mov_rrm(new R(Reg64.RBP, 16, Reg64.RAX)));
+				_asm.add(new Mov_rrm(new ModRMSIB(Reg64.RBP, 16, Reg64.RAX)));
 				if (arg != null && (Boolean) arg == Boolean.TRUE) {
-					_asm.add(new Lea(new R(Reg64.RAX, fd.HeapOffset, Reg64.RCX)));
+					_asm.add(new Lea(new ModRMSIB(Reg64.RAX, fd.HeapOffset, Reg64.RCX)));
 				} else {
-					_asm.add(new Mov_rrm(new R(Reg64.RAX, fd.HeapOffset, Reg64.RCX)));
+					_asm.add(new Mov_rrm(new ModRMSIB(Reg64.RAX, fd.HeapOffset, Reg64.RCX)));
 				}
 			}
 			_asm.add(new Push(Reg64.RCX));
@@ -500,17 +490,17 @@ public class CodeGenerator implements Visitor<Object, Object> {
 		FieldDecl fd = (FieldDecl) ref.id.decl;
 		if(fd.isStatic) {
 			if (arg != null && (Boolean) arg == Boolean.TRUE) {
-				_asm.add(new Lea(new R(Reg64.R15, fd.HeapOffset, Reg64.RCX)));
+				_asm.add(new Lea(new ModRMSIB(Reg64.R15, fd.HeapOffset, Reg64.RCX)));
 			} else {
-				_asm.add(new Mov_rrm(new R(Reg64.R15, fd.HeapOffset, Reg64.RCX)));
+				_asm.add(new Mov_rrm(new ModRMSIB(Reg64.R15, fd.HeapOffset, Reg64.RCX)));
 			}
 		} else {
 			ref.ref.visit(this, null);
 			_asm.add(new Pop(Reg64.RAX));
 			if (arg != null && (Boolean) arg == Boolean.TRUE) {
-				_asm.add(new Lea(new R(Reg64.RAX, fd.HeapOffset, Reg64.RCX)));
+				_asm.add(new Lea(new ModRMSIB(Reg64.RAX, fd.HeapOffset, Reg64.RCX)));
 			} else {
-				_asm.add(new Mov_rrm(new R(Reg64.RAX, fd.HeapOffset, Reg64.RCX)));
+				_asm.add(new Mov_rrm(new ModRMSIB(Reg64.RAX, fd.HeapOffset, Reg64.RCX)));
 			}
 		}
 		_asm.add(new Push(Reg64.RCX));
@@ -521,7 +511,7 @@ public class CodeGenerator implements Visitor<Object, Object> {
 	@Override
 	public Object visitIdentifier(Identifier id, Object arg){
 		if (id.decl instanceof LocalDecl) {
-			_asm.add(new Push(new R(Reg64.RBP, ((LocalDecl) id.decl).RBPOffset)));
+			_asm.add(new Push(new ModRMSIB(Reg64.RBP, ((LocalDecl) id.decl).RBPOffset)));
 		}
 		return null;
 	}
@@ -554,14 +544,14 @@ public class CodeGenerator implements Visitor<Object, Object> {
 	}
 	
 	private int makeMalloc() {
-		int idxStart = _asm.add( new Mov_rmi(new R(Reg64.RAX,true),0x09) ); // mmap
+		int idxStart = _asm.add( new Mov_rmi(new ModRMSIB(Reg64.RAX,true),0x09) ); // mmap
 		
-		_asm.add( new Xor(		new R(Reg64.RDI,Reg64.RDI)) 	); // addr=0
-		_asm.add( new Mov_rmi(	new R(Reg64.RSI,true),0x1000) ); // 4kb alloc
-		_asm.add( new Mov_rmi(	new R(Reg64.RDX,true),0x03) 	); // prot read|write
-		_asm.add( new Mov_rmi(	new R(Reg64.R10,true),0x22) 	); // flags= private, anonymous
-		_asm.add( new Mov_rmi(	new R(Reg64.R8, true),-1) 	); // fd= -1
-		_asm.add( new Xor(		new R(Reg64.R9,Reg64.R9)) 	); // offset=0
+		_asm.add( new Xor(		new ModRMSIB(Reg64.RDI,Reg64.RDI)) 	); // addr=0
+		_asm.add( new Mov_rmi(	new ModRMSIB(Reg64.RSI,true),0x1000) ); // 4kb alloc
+		_asm.add( new Mov_rmi(	new ModRMSIB(Reg64.RDX,true),0x03) 	); // prot read|write
+		_asm.add( new Mov_rmi(	new ModRMSIB(Reg64.R10,true),0x22) 	); // flags= private, anonymous
+		_asm.add( new Mov_rmi(	new ModRMSIB(Reg64.R8, true),-1) 	); // fd= -1
+		_asm.add( new Xor(		new ModRMSIB(Reg64.R9,Reg64.R9)) 	); // offset=0
 		_asm.add( new Syscall() );
 		
 		// pointer to newly allocated memory is in RAX
@@ -572,7 +562,7 @@ public class CodeGenerator implements Visitor<Object, Object> {
 	private int makePrintln() { //print char in RSP to the standard out
 		_asm.add( new Mov_ri64( Reg64.RAX,0x01) 	);
 		_asm.add( new Mov_ri64(	Reg64.RDI,0x01) 	);
-		_asm.add( new Mov_rmr(	new R(Reg64.RSI,Reg64.RSP)) 	);
+		_asm.add( new Mov_rmr(	new ModRMSIB(Reg64.RSI,Reg64.RSP)) 	);
 		_asm.add( new Mov_ri64(	Reg64.RDX,0x01) 	);
 		_asm.add( new Syscall() );
 		_asm.add( new Pop(Reg64.RAX));

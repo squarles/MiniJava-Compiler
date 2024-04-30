@@ -1,0 +1,12 @@
+Changes to AST data structure:
+
+- NullReference added to introduce support for 'null' keyword
+- Decorations
+    - Identifier given Declaration 'decl' field for identification
+    - LocalDecl given int 'RBPOffset' field for place on stack
+    - FieldDecl given int 'HeapOffset' field for place in heap
+        - also covers place on stack for static fields
+    - MethodDecl given helper fields:
+        - List<Instruction> 'IncompleteCallList' field for jump patching
+        - int 'StartAddress' field used to make call instructions
+        - boolean 'isMain' and 'isPrintln' fields
