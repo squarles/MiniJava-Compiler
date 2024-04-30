@@ -92,9 +92,9 @@ public class Identification implements Visitor<Object,Object> {
 					SI.addDeclaration(md, cd);
 				}
 			}
-			if (mains != 1) {
-				throw new IdentificationError(prog, "No main or more than one main.");
-			}
+		}
+		if (mains != 1) {
+			throw new IdentificationError(prog, "No main or more than one main.");
 		}
 		SI.addDeclaration(out, classSystem);
 		SI.addDeclaration(println, class_PrintStream);
