@@ -34,8 +34,6 @@ public class CodeGenerator implements Visitor<Object, Object> {
 	private int EntryPoint;
 	private int CurrentRBPOffsetV = -8;
 	private int CurrentRBPOffsetP = 16;
-	private int NumStaticFields = 0;
-	private FieldDeclList Statics = new FieldDeclList();
 
 	private MethodDecl CurrentMethod = null;
 
@@ -96,17 +94,18 @@ public class CodeGenerator implements Visitor<Object, Object> {
 			makeElf("a.out");
 	}
 
-	@Override //TODO: static fields
+	@Override
 	public Object visitPackage(Package prog, Object arg) {
-		int CurrentOffset = 0;
+		int R15Offset = 0;
 		for(ClassDecl cd : prog.classDeclList) {
+			int CurrentOffset = 0;
 			for (FieldDecl fd : cd.fieldDeclList) {
 				if(!fd.isStatic) {
 					fd.HeapOffset = CurrentOffset;
 					CurrentOffset += 8;
 				} else {
-					NumStaticFields++;
-					Statics.add(fd);
+					fd.HeapOffset = R15Offset;
+					R15Offset += 8;
 				}
 			}
 		}
@@ -138,13 +137,6 @@ public class CodeGenerator implements Visitor<Object, Object> {
 		}
 		if(md.isMain) {
 			EntryPoint = md.StartAddress;
-			int R15Offset = 0;
-			for (FieldDecl fd : Statics) {
-				fd.HeapOffset = R15Offset;
-				R15Offset += 8;
-				_asm.add(new Push(0));
-			}
-			_asm.add(new Mov_rmr(new R(Reg64.R15, Reg64.RSP)));
 		}
 		_asm.add(new Push(Reg64.RBP));
 		_asm.add(new Mov_rmr(new R(Reg64.RBP,Reg64.RSP)));
