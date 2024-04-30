@@ -98,8 +98,8 @@ public class CodeGenerator implements Visitor<Object, Object> {
 
 	@Override //TODO: static fields
 	public Object visitPackage(Package prog, Object arg) {
+		int CurrentOffset = 0;
 		for(ClassDecl cd : prog.classDeclList) {
-			int CurrentOffset = 0;
 			for (FieldDecl fd : cd.fieldDeclList) {
 				if(!fd.isStatic) {
 					fd.HeapOffset = CurrentOffset;
