@@ -499,8 +499,6 @@ public class CodeGenerator implements Visitor<Object, Object> {
 		Value of LHS will be a heap address
 
 		 */
-		ref.ref.visit(this, null);
-		_asm.add(new Pop(Reg64.RAX));
 		FieldDecl fd = (FieldDecl) ref.id.decl;
 		if(fd.isStatic) {
 			if (arg != null && (Boolean) arg == Boolean.TRUE) {
@@ -509,6 +507,8 @@ public class CodeGenerator implements Visitor<Object, Object> {
 				_asm.add(new Mov_rrm(new R(Reg64.R15, fd.HeapOffset, Reg64.RCX)));
 			}
 		} else {
+			ref.ref.visit(this, null);
+			_asm.add(new Pop(Reg64.RAX));
 			if (arg != null && (Boolean) arg == Boolean.TRUE) {
 				_asm.add(new Lea(new R(Reg64.RAX, fd.HeapOffset, Reg64.RCX)));
 			} else {
