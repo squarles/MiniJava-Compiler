@@ -183,7 +183,20 @@ public class R { //ModRMSIB
 		if( ridx == Reg64.RSP )
 			throw new IllegalArgumentException("Index cannot be rsp");
 		// Operands: [rdisp + ridx*mult + disp], r
-		int mod = 2, ss = (int) Math.log(mult);
+		int mod = 2, ss;
+		switch(mult) {
+			case 2:
+				ss = 1;
+				break;
+			case 4:
+				ss = 2;
+				break;
+			case 8:
+				ss = 3;
+				break;
+			default:
+				ss = 0;
+		}
 		_b.write(mod << 6 | x64.getIdx(r) << 3 | 4);
 		_b.write(ss << 6 | getIdx(ridx) << 3 | x64.getIdx(rdisp));
 		x64.writeInt(_b, disp);
